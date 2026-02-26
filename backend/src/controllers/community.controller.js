@@ -1,8 +1,6 @@
-import { Request, Response } from "express";
 import prisma from "../utils/prisma";
-import { AuthRequest } from "../middleware/auth.middleware";
 
-export const getPosts = async (req: Request, res: Response) => {
+export const getPosts = async (req, res) => {
     try {
         const posts = await prisma.post.findMany({
             include: {
@@ -27,7 +25,7 @@ export const getPosts = async (req: Request, res: Response) => {
     }
 };
 
-export const createPost = async (req: AuthRequest, res: Response) => {
+export const createPost = async (req, res) => {
     const { type, category, title, content, headline, initialState, currentState, duration, tags, isAnonymous } = req.body;
 
     try {
@@ -43,7 +41,7 @@ export const createPost = async (req: AuthRequest, res: Response) => {
                 duration,
                 tags: tags || [],
                 isAnonymous: isAnonymous || false,
-                authorId: req.user!.id
+                authorId: req.user.id
             }
         });
         res.status(201).json(post);
@@ -52,7 +50,7 @@ export const createPost = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getPostById = async (req: Request, res: Response) => {
+export const getPostById = async (req, res) => {
     const { id } = req.params;
     try {
         const post = await prisma.post.findUnique({
@@ -92,7 +90,7 @@ export const getPostById = async (req: Request, res: Response) => {
     }
 };
 
-export const addComment = async (req: AuthRequest, res: Response) => {
+export const addComment = async (req, res) => {
     const { postId } = req.params;
     const { text, isStory } = req.body;
 
@@ -102,7 +100,7 @@ export const addComment = async (req: AuthRequest, res: Response) => {
                 text,
                 isStory: isStory || false,
                 postId,
-                authorId: req.user!.id
+                authorId: req.user.id
             }
         });
         res.status(201).json(comment);
@@ -111,9 +109,9 @@ export const addComment = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const toggleLikePost = async (req: AuthRequest, res: Response) => {
+export const toggleLikePost = async (req, res) => {
     const { postId } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user.id;
 
     try {
         const existingLike = await prisma.like.findFirst({
@@ -149,9 +147,9 @@ export const toggleLikePost = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
-export const toggleSavePost = async (req: AuthRequest, res: Response) => {
+export const toggleSavePost = async (req, res) => {
     const { postId } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user.id;
 
     try {
         const user = await prisma.user.findUnique({ where: { id: userId } });

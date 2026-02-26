@@ -1,10 +1,8 @@
-import { Response } from "express";
 import prisma from "../utils/prisma";
-import { AuthRequest } from "../middleware/auth.middleware";
 
 const SPECIALTIES = ["General", "Ayurveda", "Homeopathy", "Naturopathy", "Cardiology", "Dermatology", "Neurology", "Orthopedics", "Pediatrics", "Psychiatry", "Gynecology", "ENT", "Ophthalmology"];
 
-export const getAllDoctors = async (req: AuthRequest, res: Response) => {
+export const getAllDoctors = async (req, res) => {
     try {
         const doctors = await prisma.doctor.findMany({
             orderBy: { name: "asc" },
@@ -16,7 +14,7 @@ export const getAllDoctors = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getDoctorById = async (req: AuthRequest, res: Response) => {
+export const getDoctorById = async (req, res) => {
     const { id } = req.params;
     try {
         const doctor = await prisma.doctor.findUnique({ where: { id } });
@@ -28,8 +26,8 @@ export const getDoctorById = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const createAppointment = async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+export const createAppointment = async (req, res) => {
+    const userId = req.user.id;
     const { patientName, patientAge, doctorId, appointmentDate, notes } = req.body;
 
     if (!patientName || !patientAge || !doctorId || !appointmentDate) {
@@ -63,8 +61,8 @@ export const createAppointment = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getMyAppointments = async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+export const getMyAppointments = async (req, res) => {
+    const userId = req.user.id;
     try {
         const appointments = await prisma.doctorAppointment.findMany({
             where: { userId },
@@ -78,13 +76,13 @@ export const getMyAppointments = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const cancelAppointment = async (req: AuthRequest, res: Response) => {
+export const cancelAppointment = async (req, res) => {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user.id;
     try {
         const appointment = await prisma.doctorAppointment.findUnique({ where: { id } });
         if (!appointment) return res.status(404).json({ message: "Appointment not found" });
-        if (appointment.userId !== userId && req.user!.role !== "ADMIN") {
+        if (appointment.userId !== userId && req.user.role !== "ADMIN") {
             return res.status(403).json({ message: "Forbidden" });
         }
         const updated = await prisma.doctorAppointment.update({
@@ -98,7 +96,7 @@ export const cancelAppointment = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getAllAppointments = async (req: AuthRequest, res: Response) => {
+export const getAllAppointments = async (req, res) => {
     try {
         const appointments = await prisma.doctorAppointment.findMany({
             include: { doctor: true, user: true },

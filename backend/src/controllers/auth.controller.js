@@ -1,16 +1,14 @@
-import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../utils/prisma";
 import { OAuth2Client } from "google-auth-library";
-import { AuthRequest } from "../middleware/auth.middleware";
 
 // Use placeholder for now. The user will replace this in .env
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req, res) => {
     const { email, password, role, firstName, lastName, username } = req.body;
 
     try {
@@ -45,7 +43,7 @@ export const register = async (req: Request, res: Response) => {
     }
 };
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
@@ -92,9 +90,9 @@ export const login = async (req: Request, res: Response) => {
     }
 };
 
-export const getMe = async (req: AuthRequest, res: Response) => {
+export const getMe = async (req, res) => {
     try {
-        const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+        const user = await prisma.user.findUnique({ where: { id: req.user.id } });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -122,20 +120,20 @@ export const getMe = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const updateProfile = async (req: AuthRequest, res: Response) => {
+export const updateProfile = async (req, res) => {
     const { username, firstName, lastName, points, streak, badges, lastStreakDate, likedPostIds, savedPostIds } = req.body;
 
     try {
         // Check if username is already taken by another user
         if (username) {
             const existingUsername = await prisma.user.findUnique({ where: { username } });
-            if (existingUsername && existingUsername.id !== req.user!.id) {
+            if (existingUsername && existingUsername.id !== req.user.id) {
                 return res.status(400).json({ message: "Username is already taken" });
             }
         }
 
         const updatedUser = await prisma.user.update({
-            where: { id: req.user!.id },
+            where: { id: req.user.id },
             data: {
                 ...(username !== undefined && { username: username || null }),
                 ...(firstName !== undefined && { firstName }),
@@ -173,7 +171,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const googleLogin = async (req: Request, res: Response) => {
+export const googleLogin = async (req, res) => {
     const { credential } = req.body;
 
     try {

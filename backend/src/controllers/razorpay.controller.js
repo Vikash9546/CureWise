@@ -1,15 +1,13 @@
-import { Request, Response } from "express";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import prisma from "../utils/prisma";
-import { AuthRequest } from "../middleware/auth.middleware";
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_placeholder_id",
     key_secret: process.env.RAZORPAY_KEY_SECRET || "rzp_test_placeholder_secret",
 });
 
-export const createRazorpayOrder = async (req: AuthRequest, res: Response) => {
+export const createRazorpayOrder = async (req, res) => {
     const { amount, appointmentId } = req.body;
 
     if (!amount || !appointmentId) {
@@ -37,7 +35,7 @@ export const createRazorpayOrder = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const verifyRazorpayPayment = async (req: AuthRequest, res: Response) => {
+export const verifyRazorpayPayment = async (req, res) => {
     const {
         razorpay_order_id,
         razorpay_payment_id,

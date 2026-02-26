@@ -1,19 +1,9 @@
-import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "../utils/prisma";
 
-export interface AuthRequest extends Request {
-    user?: {
-        id: string;
-        email: string;
-        role: string;
-        firstName?: string | null;
-        lastName?: string | null;
-        username?: string | null;
-    };
 }
 
-export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticate = async (req, res, next) => {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (!token) {
@@ -21,7 +11,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") as any;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "secret") ;
         const user = await prisma.user.findUnique({ where: { id: decoded.id } });
 
         if (!user) {
@@ -42,8 +32,8 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     }
 };
 
-export const authorize = (roles: string[]) => {
-    return (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authorize = (roles) => {
+    return (req, res, next) => {
         if (!req.user || !roles.includes(req.user.role)) {
             return res.status(403).json({ message: "Forbidden: Access denied" });
         }

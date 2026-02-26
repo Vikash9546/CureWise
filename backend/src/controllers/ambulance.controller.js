@@ -1,9 +1,7 @@
-import { Response } from "express";
 import prisma from "../utils/prisma";
-import { AuthRequest } from "../middleware/auth.middleware";
 
-export const requestAmbulance = async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+export const requestAmbulance = async (req, res) => {
+    const userId = req.user.id;
     const { patientName, location, contactNumber, emergencyType, notes } = req.body;
 
     if (!patientName || !location || !contactNumber || !emergencyType) {
@@ -29,8 +27,8 @@ export const requestAmbulance = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getMyRequests = async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+export const getMyRequests = async (req, res) => {
+    const userId = req.user.id;
     try {
         const bookings = await prisma.ambulanceBooking.findMany({
             where: { userId },
@@ -43,8 +41,8 @@ export const getMyRequests = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const updateStatus = async (req: AuthRequest, res: Response) => {
-    if (req.user!.role !== "ADMIN") return res.status(403).json({ message: "Admin only" });
+export const updateStatus = async (req, res) => {
+    if (req.user.role !== "ADMIN") return res.status(403).json({ message: "Admin only" });
     const { id } = req.params;
     const { status } = req.body;
     const validStatuses = ["REQUESTED", "DISPATCHED", "ARRIVED", "COMPLETED"];
@@ -63,7 +61,7 @@ export const updateStatus = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getAllRequests = async (req: AuthRequest, res: Response) => {
+export const getAllRequests = async (req, res) => {
     try {
         const bookings = await prisma.ambulanceBooking.findMany({
             orderBy: { createdAt: "desc" },
@@ -74,16 +72,16 @@ export const getAllRequests = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const cancelRequest = async (req: AuthRequest, res: Response) => {
+export const cancelRequest = async (req, res) => {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user.id;
 
     try {
         const booking = await prisma.ambulanceBooking.findUnique({ where: { id } });
         if (!booking) return res.status(404).json({ message: "Request not found" });
 
         // Only original user or admin can cancel
-        if (booking.userId !== userId && req.user!.role !== "ADMIN") {
+        if (booking.userId !== userId && req.user.role !== "ADMIN") {
             return res.status(403).json({ message: "Unauthorized" });
         }
 

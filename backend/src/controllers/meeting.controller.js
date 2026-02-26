@@ -1,6 +1,4 @@
-import { Response } from "express";
 import prisma from "../utils/prisma";
-import { AuthRequest } from "../middleware/auth.middleware";
 
 // Jitsi Meet deep-link: opens a custom room instantly for both participants
 const generateMeetLink = (): string => {
@@ -9,8 +7,8 @@ const generateMeetLink = (): string => {
     return `https://meet.jit.si/Appointly_Room_${segment(8)}`;
 };
 
-export const createMeeting = async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+export const createMeeting = async (req, res) => {
+    const userId = req.user.id;
     const { title, description, meetingDate, duration, type, invitees } = req.body;
 
     if (!title || !meetingDate) {
@@ -40,8 +38,8 @@ export const createMeeting = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getMyMeetings = async (req: AuthRequest, res: Response) => {
-    const userId = req.user!.id;
+export const getMyMeetings = async (req, res) => {
+    const userId = req.user.id;
     try {
         const meetings = await prisma.meeting.findMany({
             where: { userId },
@@ -54,9 +52,9 @@ export const getMyMeetings = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const cancelMeeting = async (req: AuthRequest, res: Response) => {
+export const cancelMeeting = async (req, res) => {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user.id;
     try {
         const meeting = await prisma.meeting.findUnique({ where: { id } });
         if (!meeting) return res.status(404).json({ message: "Meeting not found" });

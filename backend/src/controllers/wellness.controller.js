@@ -1,11 +1,9 @@
-import { Request, Response } from "express";
 import prisma from "../utils/prisma";
-import { AuthRequest } from "../middleware/auth.middleware";
 
-export const getWellnessPlans = async (req: AuthRequest, res: Response) => {
+export const getWellnessPlans = async (req, res) => {
     try {
         const plans = await prisma.wellnessPlan.findMany({
-            where: { userId: req.user!.id },
+            where: { userId: req.user.id },
             orderBy: { createdAt: 'desc' }
         });
         res.json(plans);
@@ -14,7 +12,7 @@ export const getWellnessPlans = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const createWellnessPlan = async (req: AuthRequest, res: Response) => {
+export const createWellnessPlan = async (req, res) => {
     const { assessment, plan } = req.body;
 
     try {
@@ -22,7 +20,7 @@ export const createWellnessPlan = async (req: AuthRequest, res: Response) => {
             data: {
                 assessment,
                 plan,
-                userId: req.user!.id
+                userId: req.user.id
             }
         });
         res.status(201).json(wellnessPlan);
@@ -31,13 +29,13 @@ export const createWellnessPlan = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const updateWellnessPlan = async (req: AuthRequest, res: Response) => {
+export const updateWellnessPlan = async (req, res) => {
     const { id } = req.params;
     const { isActive } = req.body;
 
     try {
         const updated = await prisma.wellnessPlan.update({
-            where: { id, userId: req.user!.id },
+            where: { id, userId: req.user.id },
             data: { isActive }
         });
         res.json(updated);

@@ -74,6 +74,12 @@ export const login = async (req: Request, res: Response) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 username: user.username,
+                points: user.points,
+                streak: user.streak,
+                badges: user.badges,
+                lastStreakDate: user.lastStreakDate,
+                likedPostIds: user.likedPostIds,
+                savedPostIds: user.savedPostIds,
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
             },
         });
@@ -95,6 +101,12 @@ export const getMe = async (req: AuthRequest, res: Response) => {
             firstName: user.firstName,
             lastName: user.lastName,
             username: user.username,
+            points: user.points,
+            streak: user.streak,
+            badges: user.badges,
+            lastStreakDate: user.lastStreakDate,
+            likedPostIds: user.likedPostIds,
+            savedPostIds: user.savedPostIds,
             name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
         });
     } catch (error) {
@@ -130,6 +142,12 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             firstName: updatedUser.firstName,
             lastName: updatedUser.lastName,
             username: updatedUser.username,
+            points: updatedUser.points,
+            streak: updatedUser.streak,
+            badges: updatedUser.badges,
+            lastStreakDate: updatedUser.lastStreakDate,
+            likedPostIds: updatedUser.likedPostIds,
+            savedPostIds: updatedUser.savedPostIds,
             name: updatedUser.username || (updatedUser.firstName && updatedUser.lastName ? `${updatedUser.firstName} ${updatedUser.lastName}` : updatedUser.email),
         });
     } catch (error) {
@@ -181,6 +199,12 @@ export const googleLogin = async (req: Request, res: Response) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 username: user.username,
+                points: user.points,
+                streak: user.streak,
+                badges: user.badges,
+                lastStreakDate: user.lastStreakDate,
+                likedPostIds: user.likedPostIds,
+                savedPostIds: user.savedPostIds,
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
             },
         });

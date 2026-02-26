@@ -83,7 +83,7 @@ export default function HomePage() {
                     {/* Community */}
                     <Link to="/community" className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-emerald-500/5 transition-all group relative overflow-hidden flex flex-col">
                         <div className="h-48 overflow-hidden relative">
-                            <img src="/images/community.png" alt="Community Support" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <img src="https://i0.wp.com/www.animasoul.org/wp-content/uploads/2017/10/community-group.jpg?fit=950%2C534&ssl=1" alt="Community Support" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                             <div className="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent" />
                             <div className="absolute bottom-4 left-6">
                                 <div className="w-12 h-12 rounded-xl bg-white/90 backdrop-blur-md flex items-center justify-center text-emerald-500 border border-emerald-50 shadow-lg">

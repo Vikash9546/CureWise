@@ -8,6 +8,8 @@ import {
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../context/UserDataContext';
+import api from '../api';
+import toast from 'react-hot-toast';
 
 // ── Static Data ──────────────────────────────────────────────
 const CATEGORIES = [
@@ -452,7 +454,8 @@ export default function CommunityHub() {
     // currentUser display name — username if set, real name if logged in, else 'Guest'
     const currentUser = user ? (user.username ? user.username : (user.name || user.email?.split('@')[0] || 'You')) : 'Guest';
 
-    const [posts, setPosts] = useState(INITIAL_POSTS);
+    const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [activeCategory, setActiveCategory] = useState('all');
     const [activeSort, setActiveSort] = useState('recent');
@@ -470,13 +473,37 @@ export default function CommunityHub() {
         setTimeout(() => setToast(null), 3000);
     };
 
+    const fetchPosts = async () => {
+        try {
+            const { data } = await api.get('/community');
+            setPosts(data.map(p => ({
+                ...p,
+                likes: p.likesCount,
+                isLiked: ud.isPostLiked(p.id),
+                time: new Date(p.createdAt).toLocaleDateString(),
+                author: p.isAnonymous ? 'Anonymous' : (p.author.username || p.author.firstName || 'Anonymous'),
+                comments: (p.comments || []).map(c => ({
+                    ...c,
+                    author: c.author.username || c.author.firstName || 'Anonymous',
+                    time: new Date(c.createdAt).toLocaleDateString()
+                }))
+            })));
+        } catch (error) {
+            showToast('Failed to fetch posts', 'info');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchPosts();
+    }, [user, ud.profile.likedPosts]);
+
     // ── Post Actions ──
-    const handleLike = (id) => {
+    const handleLike = async (id) => {
         if (!user) { showToast('Please log in to like posts.', 'info'); return; }
-        ud.toggleLikePost(id);
-        setPosts(prev => prev.map(p =>
-            p.id === id ? { ...p, likes: ud.isPostLiked(id) ? p.likes - 1 : p.likes + 1 } : p
-        ));
+        await ud.toggleLikePost(id);
+        fetchPosts();
         showToast(ud.isPostLiked(id) ? 'Unliked.' : '+2 pts for liking! 💚');
     };
 
@@ -484,16 +511,10 @@ export default function CommunityHub() {
         setPosts(prev => prev.map(p => p.id === id ? { ...p, showComments: !p.showComments } : p));
     };
 
-    const handleAddComment = (postId, text) => {
+    const handleAddComment = async (postId, text) => {
         if (!user) { showToast('Please log in to comment.', 'info'); return; }
-        setPosts(prev => prev.map(p => p.id === postId ? {
-            ...p,
-            comments: [...p.comments, {
-                id: Date.now(), author: currentUser, text, likes: 0, isLiked: false,
-                time: 'Just now', isExpert: false, replies: []
-            }]
-        } : p));
-        ud.addComment(postId, text, false);
+        await ud.addComment(postId, text, false);
+        fetchPosts();
         showToast('Comment posted! +5 pts 🌱');
     };
 
@@ -551,19 +572,14 @@ export default function CommunityHub() {
         showToast('Post removed.');
     };
 
-    const handleCreatePost = (data) => {
+    const handleCreatePost = async (data) => {
         if (!user) { showToast('Please log in to post.', 'info'); return; }
-        const newPost = {
-            id: Date.now(), author: data.isAnonymous ? 'Anonymous' : currentUser,
-            category: data.category, isExpert: false, isAnonymous: data.isAnonymous,
-            title: data.title, content: data.content, tags: data.tags,
-            likes: 0, savedBy: [], time: 'Just now',
-            comments: [], isReported: false, showComments: false, points: 0,
-        };
-        setPosts(prev => [newPost, ...prev]);
-        ud.addDiscussion(data);
-        setIsCreateOpen(false);
-        showToast('Discussion posted! +10 pts 🌳');
+        const newPost = await ud.addDiscussion(data);
+        if (newPost) {
+            fetchPosts();
+            setIsCreateOpen(false);
+            showToast('Discussion posted! +10 pts 🌳');
+        }
     };
 
     // ── Filter & Sort ──
@@ -574,10 +590,10 @@ export default function CommunityHub() {
             const q = searchQuery.toLowerCase();
             result = result.filter(p => p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q) || p.tags.some(t => t.toLowerCase().includes(q)));
         }
-        if (activeSort === 'popular') result.sort((a, b) => b.likes - a.likes);
-        if (activeSort === 'recent') result.sort((a, b) => a.id < b.id ? 1 : -1);
-        if (activeSort === 'unanswered') result = result.filter(p => p.comments.length === 0);
-        if (activeSort === 'expert') result = result.filter(p => p.isExpert || p.comments.some(c => c.isExpert));
+        if (activeSort === 'popular') result.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+        if (activeSort === 'recent') result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        if (activeSort === 'unanswered') result = result.filter(p => (p.comments || []).length === 0);
+        if (activeSort === 'expert') result = result.filter(p => p.isExpert || (p.comments || []).some(c => c.isExpert));
         return result;
     }, [posts, activeCategory, activeSort, searchQuery]);
 
@@ -694,47 +710,55 @@ export default function CommunityHub() {
 
                     {/* ── Main Feed ── */}
                     <main className="flex-1 min-w-0 space-y-5">
-                        {/* Sort Bar */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <Filter className="w-4 h-4 text-slate-400 shrink-0" />
-                            {SORT_OPTIONS.map(opt => (
-                                <button key={opt.id} onClick={() => setActiveSort(opt.id)}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeSort === opt.id ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white text-slate-500 border border-slate-100 hover:border-emerald-200 hover:text-emerald-600'}`}>
-                                    {opt.label}
-                                </button>
-                            ))}
-                            <span className="ml-auto text-xs font-bold text-slate-400">{filteredPosts.length} posts</span>
-                        </div>
-
-                        {filteredPosts.length === 0 ? (
-                            <div className="bg-white rounded-3xl p-16 text-center border border-slate-100">
-                                <div className="text-5xl mb-4">🌿</div>
-                                <h3 className="font-bold text-slate-700 mb-2">No discussions found</h3>
-                                <p className="text-slate-400 text-sm font-medium">Be the first to start one!</p>
-                                <button onClick={() => setIsCreateOpen(true)}
-                                    className="mt-6 px-6 py-3 bg-emerald-500 text-white rounded-2xl font-bold text-sm hover:bg-emerald-600 transition-all">
-                                    Start Discussion
-                                </button>
+                        {loading ? (
+                            <div className="py-20 flex justify-center bg-white rounded-3xl border border-slate-100 shadow-sm">
+                                <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
                             </div>
                         ) : (
-                            filteredPosts.filter(p => !reportedPosts.has(p.id)).map(post => {
-                                const isOwner = ud.profile.myDiscussions.some(d => String(d.id) === String(post.id));
-                                return (
-                                    <PostCard key={post.id} post={post}
-                                        onLike={handleLike}
-                                        onToggleComments={handleToggleComments}
-                                        onAddComment={handleAddComment}
-                                        onLikeComment={handleLikeComment}
-                                        onReplyComment={handleReplyComment}
-                                        onReport={handleReport}
-                                        onSave={handleSave}
-                                        onShare={handleShare}
-                                        onDelete={handleDelete}
-                                        currentUser={currentUser}
-                                        isOwner={isOwner}
-                                    />
-                                );
-                            })
+                            <>
+                                {/* Sort Bar */}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+                                    {SORT_OPTIONS.map(opt => (
+                                        <button key={opt.id} onClick={() => setActiveSort(opt.id)}
+                                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${activeSort === opt.id ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'bg-white text-slate-500 border border-slate-100 hover:border-emerald-200 hover:text-emerald-600'}`}>
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                    <span className="ml-auto text-xs font-bold text-slate-400">{filteredPosts.length} posts</span>
+                                </div>
+
+                                {filteredPosts.length === 0 ? (
+                                    <div className="bg-white rounded-3xl p-16 text-center border border-slate-100">
+                                        <div className="text-5xl mb-4">🌿</div>
+                                        <h3 className="font-bold text-slate-700 mb-2">No discussions found</h3>
+                                        <p className="text-slate-400 text-sm font-medium">Be the first to start one!</p>
+                                        <button onClick={() => setIsCreateOpen(true)}
+                                            className="mt-6 px-6 py-3 bg-emerald-500 text-white rounded-2xl font-bold text-sm hover:bg-emerald-600 transition-all">
+                                            Start Discussion
+                                        </button>
+                                    </div>
+                                ) : (
+                                    filteredPosts.filter(p => !reportedPosts.has(p.id)).map(post => {
+                                        const isOwner = user && (String(post.authorId) === String(user.id) || String(post.author?.id) === String(user.id));
+                                        return (
+                                            <PostCard key={post.id} post={post}
+                                                onLike={handleLike}
+                                                onToggleComments={handleToggleComments}
+                                                onAddComment={handleAddComment}
+                                                onLikeComment={handleLikeComment}
+                                                onReplyComment={handleReplyComment}
+                                                onReport={handleReport}
+                                                onSave={handleSave}
+                                                onShare={handleShare}
+                                                onDelete={handleDelete}
+                                                currentUser={currentUser}
+                                                isOwner={isOwner}
+                                            />
+                                        );
+                                    })
+                                )}
+                            </>
                         )}
                     </main>
 

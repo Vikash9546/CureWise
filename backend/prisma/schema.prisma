@@ -18,9 +18,27 @@ model User {
   lastName            String?
   password            String?
   role                String               // "ADMIN" | "CUSTOMER"
+  
+  // Reputation & Activity
+  points              Int                  @default(0)
+  streak              Int                  @default(0)
+  lastStreakDate      DateTime?
+  badges              String[]             @default(["beginner"])
+  
+  // Relations
   doctorAppointments  DoctorAppointment[]  @relation("PatientAppointments")
   ambulanceBookings   AmbulanceBooking[]   @relation("UserAmbulance")
   meetings            Meeting[]            @relation("UserMeetings")
+  posts               Post[]               @relation("UserPosts")
+  comments            Comment[]            @relation("UserComments")
+  likes               Like[]               @relation("UserLikes")
+  wellnessPlans       WellnessPlan[]       @relation("UserWellnessPlans")
+  
+  // Tracking arrays for quick lookup
+  likedPostIds        String[]             @default([])
+  savedPostIds        String[]             @default([])
+  
+  createdAt           DateTime?            @default(now())
 }
 
 model Doctor {
@@ -47,12 +65,12 @@ model DoctorAppointment {
   doctorId        String    @db.ObjectId
   patientName     String
   patientAge      Int
-  specialty       String    // Redundant but helpful if doctor is deleted
+  specialty       String    
   appointmentDate DateTime
   notes           String?
-  paymentStatus   String    @default("PENDING") // "PENDING", "COMPLETED"
+  paymentStatus   String    @default("PENDING") 
   paymentAmount   Float
-  status          String    @default("PENDING") // "PENDING", "CONFIRMED", "CANCELLED"
+  status          String    @default("PENDING") 
   createdAt       DateTime  @default(now())
 }
 
@@ -63,8 +81,8 @@ model AmbulanceBooking {
   patientName   String
   location      String
   contactNumber String
-  emergencyType String    // "Accident", "Heart Attack", "Stroke", "Other"
-  status        String    @default("REQUESTED") // "REQUESTED", "DISPATCHED", "ARRIVED", "COMPLETED"
+  emergencyType String    
+  status        String    @default("REQUESTED") 
   notes         String?
   createdAt     DateTime  @default(now())
 }
@@ -76,10 +94,63 @@ model Meeting {
   title         String
   description   String?
   meetingDate   DateTime
-  duration      Int       @default(30) // minutes
-  type          String    @default("video") // "video" | "audio"
+  duration      Int       @default(30) 
+  type          String    @default("video") 
   meetLink      String?
   invitees      String[]  @default([])
-  status        String    @default("SCHEDULED") // "SCHEDULED", "CANCELLED"
+  status        String    @default("SCHEDULED") 
+  createdAt     DateTime  @default(now())
+}
+
+model Post {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  author        User      @relation("UserPosts", fields: [authorId], references: [id])
+  authorId      String    @db.ObjectId
+  type          String    // "STORY" | "DISCUSSION"
+  category      String
+  title         String
+  content       String    
+  headline      String?
+  initialState  String?   
+  currentState  String?   
+  duration      String?   
+  tags          String[]  @default([])
+  likesCount    Int       @default(0)
+  isVerified    Boolean   @default(false)
+  isAnonymous   Boolean   @default(false)
+  comments      Comment[]
+  likes         Like[]
+  createdAt     DateTime  @default(now())
+}
+
+model Comment {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  author        User      @relation("UserComments", fields: [authorId], references: [id])
+  authorId      String    @db.ObjectId
+  post          Post      @relation(fields: [postId], references: [id])
+  postId        String    @db.ObjectId
+  text          String
+  likesCount    Int       @default(0)
+  isStory       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+}
+
+model Like {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  user          User      @relation("UserLikes", fields: [userId], references: [id])
+  userId        String    @db.ObjectId
+  post          Post?     @relation(fields: [postId], references: [id])
+  postId        String?   @db.ObjectId
+  commentId     String?   @db.ObjectId
+  createdAt     DateTime  @default(now())
+}
+
+model WellnessPlan {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  user          User      @relation("UserWellnessPlans", fields: [userId], references: [id])
+  userId        String    @db.ObjectId
+  assessment    Json?     
+  plan          Json?     
+  isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
 }

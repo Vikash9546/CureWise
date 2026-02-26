@@ -5,6 +5,8 @@ import authRoutes from "./routes/auth.routes";
 import doctorRoutes from "./routes/doctor.routes";
 import ambulanceRoutes from "./routes/ambulance.routes";
 import meetingRoutes from "./routes/meeting.routes";
+import communityRoutes from "./routes/community.routes";
+import wellnessRoutes from "./routes/wellness.routes";
 
 dotenv.config({ override: true });
 
@@ -18,6 +20,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/ambulance", ambulanceRoutes);
 app.use("/api/meetings", meetingRoutes);
+app.use("/api/community", communityRoutes);
+app.use("/api/wellness", wellnessRoutes);
 
 app.get("/health", (req, res) => {
     res.json({ status: "ok" });

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
     MessageSquare, Star, Zap, Users, Search, Plus, ThumbsUp, MessageCircle,
     Share2, Award, TrendingUp, ShieldCheck, Flag, X, ChevronDown, ChevronUp,

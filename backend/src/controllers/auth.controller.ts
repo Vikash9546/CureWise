@@ -81,6 +81,10 @@ export const login = async (req: Request, res: Response) => {
                 likedPostIds: user.likedPostIds,
                 savedPostIds: user.savedPostIds,
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
+                activeWellnessPlan: await prisma.wellnessPlan.findFirst({
+                    where: { userId: user.id, isActive: true },
+                    orderBy: { createdAt: 'desc' }
+                })
             },
         });
     } catch (error) {
@@ -108,6 +112,10 @@ export const getMe = async (req: AuthRequest, res: Response) => {
             likedPostIds: user.likedPostIds,
             savedPostIds: user.savedPostIds,
             name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
+            activeWellnessPlan: await prisma.wellnessPlan.findFirst({
+                where: { userId: user.id, isActive: true },
+                orderBy: { createdAt: 'desc' }
+            })
         });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
@@ -115,7 +123,7 @@ export const getMe = async (req: AuthRequest, res: Response) => {
 };
 
 export const updateProfile = async (req: AuthRequest, res: Response) => {
-    const { username, firstName, lastName } = req.body;
+    const { username, firstName, lastName, points, streak, badges, lastStreakDate, likedPostIds, savedPostIds } = req.body;
 
     try {
         // Check if username is already taken by another user
@@ -132,6 +140,12 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
                 ...(username !== undefined && { username: username || null }),
                 ...(firstName !== undefined && { firstName }),
                 ...(lastName !== undefined && { lastName }),
+                ...(points !== undefined && { points: parseInt(points) }),
+                ...(streak !== undefined && { streak: parseInt(streak) }),
+                ...(badges !== undefined && { badges }),
+                ...(lastStreakDate !== undefined && { lastStreakDate: lastStreakDate ? new Date(lastStreakDate) : null }),
+                ...(likedPostIds !== undefined && { likedPostIds }),
+                ...(savedPostIds !== undefined && { savedPostIds }),
             },
         });
 
@@ -149,6 +163,10 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             likedPostIds: updatedUser.likedPostIds,
             savedPostIds: updatedUser.savedPostIds,
             name: updatedUser.username || (updatedUser.firstName && updatedUser.lastName ? `${updatedUser.firstName} ${updatedUser.lastName}` : updatedUser.email),
+            activeWellnessPlan: await prisma.wellnessPlan.findFirst({
+                where: { userId: updatedUser.id, isActive: true },
+                orderBy: { createdAt: 'desc' }
+            })
         });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
@@ -206,6 +224,10 @@ export const googleLogin = async (req: Request, res: Response) => {
                 likedPostIds: user.likedPostIds,
                 savedPostIds: user.savedPostIds,
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
+                activeWellnessPlan: await prisma.wellnessPlan.findFirst({
+                    where: { userId: user.id, isActive: true },
+                    orderBy: { createdAt: 'desc' }
+                })
             },
         });
     } catch (error) {

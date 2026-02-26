@@ -162,17 +162,22 @@ export function UserDataProvider({ children }) {
         }
     }, [persist, awardBadge]);
 
-    const toggleSavePost = useCallback((postId) => {
-        persist(prev => {
-            const id = String(postId);
-            const isSaved = prev.savedPosts.includes(id);
-            const pts = prev.points + (isSaved ? POINTS.UNSAVE_POST : POINTS.SAVE_POST);
-            return {
-                ...prev,
-                savedPosts: isSaved ? prev.savedPosts.filter(x => x !== id) : [...prev.savedPosts, id],
-                points: pts,
-            };
-        });
+    const toggleSavePost = useCallback(async (postId) => {
+        const id = String(postId);
+        try {
+            await api.post(`/community/${id}/save`);
+            persist(prev => {
+                const isSaved = prev.savedPosts.includes(id);
+                const pts = prev.points + (isSaved ? POINTS.UNSAVE_POST : POINTS.SAVE_POST);
+                return {
+                    ...prev,
+                    savedPosts: isSaved ? prev.savedPosts.filter(x => x !== id) : [...prev.savedPosts, id],
+                    points: pts,
+                };
+            });
+        } catch (error) {
+            console.error("Save toggle failed:", error);
+        }
     }, [persist]);
 
     const addComment = useCallback(async (postId, text, isStory = false) => {

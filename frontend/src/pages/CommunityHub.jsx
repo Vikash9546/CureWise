@@ -473,6 +473,25 @@ export default function CommunityHub() {
         setTimeout(() => setToast(null), 3000);
     };
 
+    if (!user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#f8f9f4] -mt-8 -mx-4 px-4">
+                <div className="text-center bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-2xl max-w-lg transition-all animate-in fade-in zoom-in duration-500">
+                    <div className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center text-emerald-600 mx-auto mb-8 shadow-inner">
+                        <Lock className="w-10 h-10" />
+                    </div>
+                    <h2 className="text-4xl font-bold text-slate-900 mb-4 font-outfit">Community <span className="text-emerald-500 italic">Sanctuary</span></h2>
+                    <p className="text-slate-500 font-medium mb-10 leading-relaxed text-lg">
+                        Our community is a private space for members to share, heal, and grow together. Please log in to join the conversation.
+                    </p>
+                    <Link to="/login" className="inline-block w-full px-10 py-5 bg-emerald-500 text-white rounded-[2rem] font-bold text-xl hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/25 active:scale-95">
+                        Join the Community
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     const fetchPosts = async () => {
         try {
             const { data } = await api.get('/community');

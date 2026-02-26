@@ -1,13 +1,14 @@
 import { Router } from "express";
-import { getPosts, createPost, getPostById, addComment, toggleLikePost } from "../controllers/community.controller";
+import { getPosts, createPost, getPostById, addComment, toggleLikePost, toggleSavePost } from "../controllers/community.controller";
 import { authenticate } from "../middleware/auth.middleware";
 
 const router = Router();
 
-router.get("/", getPosts);
-router.get("/:id", getPostById);
+router.get("/", authenticate, getPosts);
+router.get("/:id", authenticate, getPostById);
 router.post("/", authenticate, createPost);
 router.post("/:postId/comments", authenticate, addComment);
 router.post("/:postId/like", authenticate, toggleLikePost);
+router.post("/:postId/save", authenticate, toggleSavePost);
 
 export default router;

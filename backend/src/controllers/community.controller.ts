@@ -149,3 +149,26 @@ export const toggleLikePost = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+export const toggleSavePost = async (req: AuthRequest, res: Response) => {
+    const { postId } = req.params;
+    const userId = req.user!.id;
+
+    try {
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const isSaved = user.savedPostIds.includes(postId);
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                savedPostIds: isSaved
+                    ? { set: user.savedPostIds.filter(id => id !== postId) }
+                    : { push: postId }
+            }
+        });
+
+        res.json({ saved: !isSaved });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+};

@@ -36,7 +36,7 @@ export default function Profile() {
 
     // Determine the display name: username first, then full name, then email
     const displayName = user.username
-        ? `@${user.username}`
+        ? user.username
         : (user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email);
 
     const handleStartEditUsername = () => {
@@ -105,14 +105,13 @@ export default function Profile() {
                             {editingUsername ? (
                                 <div className="flex items-center gap-2">
                                     <div className="relative">
-                                        <AtSign className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-violet-500" />
                                         <input
                                             type="text"
                                             autoFocus
                                             value={usernameInput}
                                             onChange={(e) => setUsernameInput(e.target.value.toLowerCase().replace(/\s/g, '_'))}
                                             placeholder="set_username"
-                                            className="pl-8 pr-3 py-1.5 text-sm border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400/30 bg-violet-50 text-slate-800 font-medium w-48"
+                                            className="pl-4 pr-3 py-1.5 text-sm border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400/30 bg-violet-50 text-slate-800 font-medium w-48"
                                         />
                                     </div>
                                     <button
@@ -135,7 +134,6 @@ export default function Profile() {
                                 <div className="flex items-center gap-2">
                                     {user.username ? (
                                         <span className="flex items-center gap-1.5 text-violet-600 font-bold text-base">
-                                            <AtSign className="w-4 h-4" />
                                             {user.username}
                                         </span>
                                     ) : (

@@ -126,10 +126,9 @@ export default function Register() {
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 ml-1">Username <span className="text-slate-400 font-medium">(optional)</span></label>
                         <div className="relative group">
-                            <AtSign className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-600 transition-colors" />
                             <input
                                 type="text"
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-12 pr-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-violet-500/50 focus:ring-4 focus:ring-violet-500/5 transition-all outline-none"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 px-4 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-violet-500/50 focus:ring-4 focus:ring-violet-500/5 transition-all outline-none"
                                 placeholder="your_username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, '_'))}

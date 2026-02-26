@@ -450,7 +450,7 @@ export default function CommunityHub() {
     const ud = useUserData();
 
     // currentUser display name — username if set, real name if logged in, else 'Guest'
-    const currentUser = user ? (user.username ? `@${user.username}` : (user.name || user.email?.split('@')[0] || 'You')) : 'Guest';
+    const currentUser = user ? (user.username ? user.username : (user.name || user.email?.split('@')[0] || 'You')) : 'Guest';
 
     const [posts, setPosts] = useState(INITIAL_POSTS);
     const [isCreateOpen, setIsCreateOpen] = useState(false);

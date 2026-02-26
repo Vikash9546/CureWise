@@ -1,64 +1,114 @@
-# Appointment Booking System
+# CureWise - Holistic Wellness & Healing Platform
 
-A full-stack application where an Admin publishes availability slots and Customers book or cancel them. Built with real-world concurrency safety and premium UI handling.
+CureWise is a comprehensive health and wellness ecosystem designed to bridge the gap between traditional medicine and holistic healing. It empowers users with AI-driven personalized wellness plans, a vibrant community support system, and direct access to medical experts.
 
-## Tech Stack
-- **Backend**: Node.js, Express, Prisma, SQLite
-- **Frontend**: React (Vite), Vanilla CSS, Tailwind, Lucide Icons
-- **Auth**: JWT-based Authentication
-- **Testing**: Jest, Supertest
+## 🌟 Key Features
 
-## Key Design Decisions
+- **Healing Vault (Success Stories)**: A protected sanctuary where community members share their intimate transformation journeys. Access is restricted to authenticated users to maintain privacy and trust.
+- **Community Hub**: An interactive platform for health discussions, peer support, and verified resource sharing.
+- **AI-Powered Wellness Plans**: Personalized health assessments that generate dynamic wellness plans based on holistic and natural principles.
+- **Doctor Consultation**: Seamless booking system for specialized consultations, including support for video meetings.
+- **Emergency Care**: High-priority ambulance booking system with real-time status tracking for critical situations.
+- **Remedy Database**: A vast, searchable library of natural remedies and disease mapping to empower self-care.
+- **Holistic Health Tools**: Integrated BMI calculator, water intake tracker, and evidence-based health risk assessment quizzes.
+- **Zen Space**: Dedicated yoga and meditation modules, including a "Zen Space Finder" to locate nearby studios.
+- **Gamified Reputation**: A motivation engine that rewards users with points, daily streaks, and tiered badges for maintaining healthy habits.
 
-### 1. Concurrency & Double Booking Prevention
-We use **Prisma transactions** with an atomic update strategy. When a booking request comes in, we check the slot status within a database transaction. If the status is not `AVAILABLE`, the transaction fails, preventing two users from booking the same slot simultaneously. 
-**Clean response**: Returns `409 Conflict` if the slot is already taken.
+---
 
-### 2. Slot Overlap Rules
-Admin slot creation includes a backend check for temporal overlaps. A new slot is rejected if any existing (non-cancelled) slot for that admin exists such that:
-`start_time < new_end` AND `end_time > new_start`. 
-Boundary rules: `[start, end)` behavior is enforced.
+## 🏗️ System Design
 
-### 3. State Machine & Cancellation
-- **AVAILABLE** -> **BOOKED** (Successful booking)
-- **BOOKED** -> **AVAILABLE** (Customer cancels their booking)
-- **ANY** -> **CANCELLED** (Admin cancels the slot; associations are also marked cancelled)
-We use status fields and timestamps (`cancelled_at`) rather than deleting rows to maintain audit trails.
+### Architecture Overview
 
-### 4. URL-Synced Filters
-The Customer Slots Listing page uses `URLSearchParams` to sync the date, time window, and sorting state. This allows for shareable links and a stable UX on browser refreshes.
+CureWise follows a modern **three-tier architecture** optimized for horizontal scalability and high user engagement.
 
-## Setup Instructions
+```mermaid
+graph TD
+    subgraph Client_Layer [Frontend - React SPAs]
+        U[User Interface] --> C[Context API / State]
+        C --> T[Tailwind CSS Components]
+    end
 
-### Backend
-1. `cd backend`
-2. `npm install`
-3. `cp .env.example .env`
-4. `npx prisma migrate dev --name init`
-5. `npm run dev` (Starts on port 3000)
+    subgraph API_Layer [Backend - Node/Express]
+        Auth[Auth Middleware / JWT]
+        Ctrl[Controller logic]
+        Auth --> Ctrl
+    end
 
-### Frontend
-1. `cd frontend`
-2. `npm install`
-3. `npm run dev` (Starts on port 5173)
+    subgraph Service_Integration [External Services]
+        G[Google OAuth]
+        R[Razorpay Payments]
+    end
+
+    subgraph Persistence_Layer [Database - MongoDB]
+        Prisma[Prisma ORM]
+        DB[(MongoDB Cluster)]
+    end
+
+    Client_Layer -- HTTPS / REST --> Auth
+    Ctrl -- Query -- > Prisma
+    Prisma -- Data --> DB
+    Ctrl -- API Calls --> Service_Integration
+```
+
+### Components Detail
+
+- **Frontend**: Built with **React** and **Vite**, prioritizing "Rich Aesthetics" and "Visual Excellence". It uses the Context API to maintain a synchronized state of user points, streaks, and wellness progress across all segments.
+- **Backend**: A robust **Node.js/Express** server (JavaScript) that handles business logic, gamification calculations (streaks/badges), and secure data orchestration.
+- **Database**: **MongoDB** is utilized for its flexible document-oriented structure, ideal for storing nested wellness plans, rich community posts, and varied user interactions.
+- **Security**: Implements a zero-trust approach for community data. All community and wellness endpoints are protected via JWT-based authentication and granular role-based access control (RBAC).
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 18, Tailwind CSS, Lucide Icons, Axios, React Router.
+- **Backend**: Node.js, Express.js (ESM), Prisma ORM.
+- **Database**: MongoDB (Altas).
+- **Auth**: JWT, bcryptjs, google-auth-library.
+- **Integrations**: Razorpay (Payments).
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher)
+- A running MongoDB instance (or Atlas cluster)
+- Environment variables: `DATABASE_URL`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`.
+
+### Installation
+
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/Vikash9546/CureWise.git
+    cd CureWise
+    ```
+
+2.  **Backend Configuration**
+    ```bash
+    cd backend
+    npm install
+    npx prisma generate
+    npm run dev
+    ```
+
+3.  **Frontend Configuration**
+    ```bash
+    cd frontend
+    npm install
+    npm run dev
+    ```
 
 ### Seed Data
-Run `ts-node src/seed.ts` inside `backend` to create an initial admin and customer.
-- **Admin**: `admin@example.com` / `password123`
-- **Customer**: `customer@example.com` / `password123`
+To populate the database with initial natural remedies and expert doctors:
+```bash
+# Inside backend directory
+node src/seed.js
+node src/seed-natural-doctors.js
+```
 
-## API Documentation
+---
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/auth/register` | Open | Create new account |
-| POST | `/api/auth/login` | Open | Authenticate and get JWT |
-| GET | `/api/slots` | Open | List available/all slots |
-| POST | `/api/slots` | Admin | Create availability slot |
-| PATCH | `/api/slots/:id/cancel`| Admin | Cancel a slot |
-| POST | `/api/bookings` | Cust | Book a slot |
-| GET | `/api/bookings/me` | Cust | View own bookings |
-| PATCH | `/api/bookings/:id/cancel`| Cust | Cancel own booking |
-
-## Testing
-Run `npm test` inside `backend` to execute integration tests covering booking success, concurrency conflicts, and authorization.
+## 📜 License
+This project is licensed under the MIT License - see the LICENSE file for details.

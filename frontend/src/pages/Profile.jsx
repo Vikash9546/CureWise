@@ -5,14 +5,21 @@ import {
     User, Mail, Shield, ShieldCheck, Flame, Zap, Award,
     MessageSquare, Heart, Bookmark, History, Target,
     ExternalLink, ChevronRight, Sparkles, Filter,
-    Calendar, Video, Leaf, Trash2
+    Calendar, Video, Leaf, Trash2, AtSign, Edit3, Check, X, Loader2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import api from '../api';
 
 export default function Profile() {
-    const { user } = useAuth();
+    const { user, login, token } = useAuth();
     const ud = useUserData();
     const [activeTab, setActiveTab] = useState('overview');
+
+    // Username editing state
+    const [editingUsername, setEditingUsername] = useState(false);
+    const [usernameInput, setUsernameInput] = useState('');
+    const [usernameLoading, setUsernameLoading] = useState(false);
 
     if (!user) {
         return (
@@ -27,6 +34,43 @@ export default function Profile() {
 
     const { profile, currentBadge } = ud;
 
+    // Determine the display name: username first, then full name, then email
+    const displayName = user.username
+        ? `@${user.username}`
+        : (user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email);
+
+    const handleStartEditUsername = () => {
+        setUsernameInput(user.username || '');
+        setEditingUsername(true);
+    };
+
+    const handleCancelEditUsername = () => {
+        setEditingUsername(false);
+        setUsernameInput('');
+    };
+
+    const handleSaveUsername = async () => {
+        if (!usernameInput.trim() && !user.username) {
+            setEditingUsername(false);
+            return;
+        }
+        setUsernameLoading(true);
+        try {
+            const { data } = await api.put('/auth/profile', {
+                username: usernameInput.trim() || null,
+            });
+            // Update auth context with new user data
+            login(token, data);
+            toast.success('Username updated successfully!');
+            setEditingUsername(false);
+        } catch (err) {
+            const message = err.response?.data?.message || 'Failed to update username';
+            toast.error(message);
+        } finally {
+            setUsernameLoading(false);
+        }
+    };
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-12 space-y-10 min-h-screen bg-[#f8f9f4]">
             {/* ── Header / Profile Summary ── */}
@@ -38,7 +82,7 @@ export default function Profile() {
                     {/* Portrait */}
                     <div className="shrink-0">
                         <div className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-[2.5rem] flex items-center justify-center text-4xl border border-white shadow-inner relative group">
-                            <span className="text-6xl">{user.name?.[0] || '🌿'}</span>
+                            <span className="text-6xl">{user.username?.[0]?.toUpperCase() || user.name?.[0] || '🌿'}</span>
                             <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white rounded-2xl shadow-xl flex items-center justify-center text-2xl border border-slate-50">
                                 {currentBadge.icon}
                             </div>
@@ -47,12 +91,67 @@ export default function Profile() {
 
                     {/* Basic Info */}
                     <div className="flex-1 text-center md:text-left">
-                        <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
-                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900">{user.name || `${user.firstName} ${user.lastName}`}</h1>
+                        <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
+                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
+                                {user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email}
+                            </h1>
                             <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-full self-center md:self-auto flex items-center gap-1.5">
                                 <ShieldCheck className="w-3.5 h-3.5" /> Verified Account
                             </span>
                         </div>
+
+                        {/* Username Display / Edit */}
+                        <div className="flex items-center justify-center md:justify-start gap-2 mb-5">
+                            {editingUsername ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="relative">
+                                        <AtSign className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-violet-500" />
+                                        <input
+                                            type="text"
+                                            autoFocus
+                                            value={usernameInput}
+                                            onChange={(e) => setUsernameInput(e.target.value.toLowerCase().replace(/\s/g, '_'))}
+                                            placeholder="set_username"
+                                            className="pl-8 pr-3 py-1.5 text-sm border border-violet-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400/30 bg-violet-50 text-slate-800 font-medium w-48"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={handleSaveUsername}
+                                        disabled={usernameLoading}
+                                        className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                                        title="Save username"
+                                    >
+                                        {usernameLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                    </button>
+                                    <button
+                                        onClick={handleCancelEditUsername}
+                                        className="p-1.5 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 transition-colors"
+                                        title="Cancel"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    {user.username ? (
+                                        <span className="flex items-center gap-1.5 text-violet-600 font-bold text-base">
+                                            <AtSign className="w-4 h-4" />
+                                            {user.username}
+                                        </span>
+                                    ) : (
+                                        <span className="text-slate-400 text-sm font-medium italic">No username set</span>
+                                    )}
+                                    <button
+                                        onClick={handleStartEditUsername}
+                                        className="p-1.5 text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
+                                        title="Edit username"
+                                    >
+                                        <Edit3 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="flex flex-wrap justify-center md:justify-start gap-6 mb-8 text-slate-500 font-medium">
                             <div className="flex items-center gap-2">
                                 <Mail className="w-4 h-4 text-violet-500" /> {user.email}
@@ -204,7 +303,7 @@ export default function Profile() {
                                                     <div className="flex gap-4">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0" />
                                                         <div>
-                                                            <p className="text-sm font-medium text-slate-600 line-clamp-1 italic mb-1">“{c.text}”</p>
+                                                            <p className="text-sm font-medium text-slate-600 line-clamp-1 italic mb-1">"{c.text}"</p>
                                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                                                 {c.isStory ? 'Commented on Story' : 'Replied to Discussion'} • {new Date(c.time).toLocaleDateString()}
                                                             </p>

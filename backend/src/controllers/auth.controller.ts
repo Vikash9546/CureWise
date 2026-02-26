@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../utils/prisma";
 import { OAuth2Client } from "google-auth-library";
+import { AuthRequest } from "../middleware/auth.middleware";
 
 // Use placeholder for now. The user will replace this in .env
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
@@ -10,12 +11,20 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 
 export const register = async (req: Request, res: Response) => {
-    const { email, password, role, firstName, lastName } = req.body;
+    const { email, password, role, firstName, lastName, username } = req.body;
 
     try {
         const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ message: "User already exists" });
+        }
+
+        // Check if username is already taken
+        if (username) {
+            const existingUsername = await prisma.user.findUnique({ where: { username } });
+            if (existingUsername) {
+                return res.status(400).json({ message: "Username is already taken" });
+            }
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -24,6 +33,7 @@ export const register = async (req: Request, res: Response) => {
                 email,
                 firstName,
                 lastName,
+                username: username || null,
                 password: hashedPassword,
                 role: role || "CUSTOMER",
             },
@@ -57,15 +67,74 @@ export const login = async (req: Request, res: Response) => {
 
         res.json({
             token,
-            user: { id: user.id, email: user.email, role: user.role },
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                username: user.username,
+                name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
+            },
         });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
     }
 };
 
-export const getMe = async (req: any, res: Response) => {
-    res.json(req.user);
+export const getMe = async (req: AuthRequest, res: Response) => {
+    try {
+        const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
+            name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+    const { username, firstName, lastName } = req.body;
+
+    try {
+        // Check if username is already taken by another user
+        if (username) {
+            const existingUsername = await prisma.user.findUnique({ where: { username } });
+            if (existingUsername && existingUsername.id !== req.user!.id) {
+                return res.status(400).json({ message: "Username is already taken" });
+            }
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user!.id },
+            data: {
+                ...(username !== undefined && { username: username || null }),
+                ...(firstName !== undefined && { firstName }),
+                ...(lastName !== undefined && { lastName }),
+            },
+        });
+
+        res.json({
+            id: updatedUser.id,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            firstName: updatedUser.firstName,
+            lastName: updatedUser.lastName,
+            username: updatedUser.username,
+            name: updatedUser.username || (updatedUser.firstName && updatedUser.lastName ? `${updatedUser.firstName} ${updatedUser.lastName}` : updatedUser.email),
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
 };
 
 export const googleLogin = async (req: Request, res: Response) => {
@@ -105,7 +174,15 @@ export const googleLogin = async (req: Request, res: Response) => {
 
         res.json({
             token,
-            user: { id: user.id, email: user.email, role: user.role },
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                username: user.username,
+                name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
+            },
         });
     } catch (error) {
         console.error("Google login error:", error);

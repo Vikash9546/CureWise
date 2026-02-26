@@ -79,7 +79,7 @@ export default function StoryDetail() {
         if (!user) { toast.error('Please log in to comment'); return; }
         const newComment = {
             id: Date.now(),
-            author: user.name || 'You',
+            author: user.username ? `@${user.username}` : (user.name || 'You'),
             text: comment,
             likes: 0,
             isLiked: false,

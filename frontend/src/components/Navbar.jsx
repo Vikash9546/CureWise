@@ -135,11 +135,11 @@ export default function Navbar() {
                                 <Link to="/profile" className="flex items-center gap-3 group">
                                     <div className="hidden md:flex flex-col items-end">
                                         <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-widest">{currentBadge?.label} {currentBadge?.icon}</span>
-                                        <span className="font-bold text-sm text-slate-800">{user.name || (user.firstName ? `${user.firstName}` : user.email.split('@')[0])}</span>
+                                        <span className="font-bold text-sm text-slate-800">{user.username ? `@${user.username}` : (user.name || (user.firstName ? `${user.firstName}` : user.email.split('@')[0]))}</span>
                                     </div>
                                     <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-100 p-0.5 border-2 border-emerald-500 group-hover:border-emerald-600 transition-colors relative">
                                         <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-slate-400 font-bold overflow-hidden text-sm">
-                                            {user.name?.[0] || <User className="w-5 h-5" />}
+                                            {user.username?.[0]?.toUpperCase() || user.name?.[0] || <User className="w-5 h-5" />}
                                         </div>
                                         <div className="absolute -bottom-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-white rounded-full shadow-lg border border-slate-50 flex items-center justify-center text-[8px] md:text-[10px]">
                                             {currentBadge?.icon}

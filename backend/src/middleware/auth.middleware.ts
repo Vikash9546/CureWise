@@ -7,6 +7,9 @@ export interface AuthRequest extends Request {
         id: string;
         email: string;
         role: string;
+        firstName?: string | null;
+        lastName?: string | null;
+        username?: string | null;
     };
 }
 
@@ -29,6 +32,9 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
             id: user.id,
             email: user.email,
             role: user.role,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            username: user.username,
         };
         next();
     } catch (error) {

@@ -68,7 +68,7 @@ export default function Navbar() {
                         <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
                             <Leaf className="w-4 h-4 md:w-6 md:h-6" />
                         </div>
-                        <span className="tracking-tight font-playfair whitespace-nowrap">NatureWellness</span>
+                        <span className="tracking-tight font-playfair whitespace-nowrap">CureWise</span>
                     </Link>
 
                     <div className="hidden lg:flex items-center gap-10">
@@ -146,13 +146,6 @@ export default function Navbar() {
                                         </div>
                                     </div>
                                 </Link>
-                                <button
-                                    onClick={handleLogout}
-                                    className="hidden sm:flex p-2 md:p-2.5 rounded-xl bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all duration-300 border border-slate-100"
-                                    title="Logout"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                </button>
                             </div>
                         ) : (
                             <div className="hidden sm:flex items-center gap-4">
@@ -164,8 +157,8 @@ export default function Navbar() {
                             <Menu className="w-6 h-6" />
                         </button>
                     </div>
-                </div>
-            </nav>
+                </div >
+            </nav >
 
             {/* Mobile Menu Drawer */}
             {
@@ -239,9 +232,9 @@ export default function Navbar() {
                                         <Link to="/register" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 rounded-2xl bg-emerald-500 text-white font-bold text-center shadow-lg shadow-emerald-500/20">Sign Up</Link>
                                     </>
                                 ) : (
-                                    <button onClick={handleLogout} className="w-full py-4 rounded-2xl bg-rose-50 text-rose-500 font-bold border border-rose-100 flex items-center justify-center gap-2">
-                                        <LogOut className="w-5 h-5" /> Log Out
-                                    </button>
+                                    <Link to="/profile" onClick={() => setIsMobileMenuOpen(false)} className="w-full py-4 rounded-2xl bg-emerald-50 text-emerald-600 font-bold border border-emerald-100 flex items-center justify-center gap-2">
+                                        <User className="w-5 h-5" /> View Profile
+                                    </Link>
                                 )}
                             </div>
                         </div>

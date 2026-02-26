@@ -5,14 +5,15 @@ import {
     User, Mail, Shield, ShieldCheck, Flame, Zap, Award,
     MessageSquare, Heart, Bookmark, History, Target,
     ExternalLink, ChevronRight, Sparkles, Filter,
-    Calendar, Video, Leaf, Trash2, AtSign, Edit3, Check, X, Loader2
+    Calendar, Video, Leaf, Trash2, AtSign, Edit3, Check, X, Loader2, LogOut
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../api';
 
 export default function Profile() {
-    const { user, login, token } = useAuth();
+    const { user, login, token, logout } = useAuth();
+    const navigate = useNavigate();
     const ud = useUserData();
     const [activeTab, setActiveTab] = useState('overview');
 
@@ -189,6 +190,18 @@ export default function Profile() {
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div className="md:self-start mt-6 md:mt-0">
+                        <button
+                            onClick={() => {
+                                logout();
+                                navigate('/login');
+                            }}
+                            className="px-6 py-3 bg-rose-50 text-rose-500 rounded-2xl font-bold border border-rose-100 hover:bg-rose-500 hover:text-white transition-all active:scale-95 flex items-center gap-2 shadow-sm"
+                        >
+                            <LogOut className="w-4 h-4" /> Sign Out
+                        </button>
                     </div>
                 </div>
             </div>

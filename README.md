@@ -58,6 +58,31 @@ graph TD
 - **Database**: **MongoDB** is utilized for its flexible document-oriented structure, ideal for storing nested wellness plans, rich community posts, and varied user interactions.
 - **Security**: Implements a zero-trust approach for community data. All community and wellness endpoints are protected via JWT-based authentication and granular role-based access control (RBAC).
 
+### Core Interaction Flow
+
+The following sequence diagram illustrates the flow of a typical user request, such as generating a Personalized Wellness Plan:
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as React Frontend
+    participant M as Auth Middleware
+    participant C as Wellness Controller
+    participant DB as MongoDB (Prisma)
+
+    U->>F: Submits Health Assessment
+    F->>M: POST /api/wellness/assess (JWT)
+    M->>M: Verify Token & User Role
+    M->>C: Pass Validated User
+    C->>C: Process AI Wellness Logic
+    C->>DB: Save Wellness Plan
+    DB-->>C: Confirm Persistence
+    C->>DB: Update User Points/Streak
+    DB-->>C: Update Success
+    C-->>F: Return Personalized Plan JSON
+    F-->>U: Render Interactive Journey
+```
+
 ---
 
 ## 🛠️ Tech Stack

@@ -46,7 +46,7 @@ graph TD
     end
 
     Client_Layer -- HTTPS / REST --> Auth
-    Ctrl -- Query -- > Prisma
+    Ctrl -- Query --> Prisma
     Prisma -- Data --> DB
     Ctrl -- API Calls --> Service_Integration
 ```

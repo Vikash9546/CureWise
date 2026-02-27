@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { createMeeting, getMyMeetings, cancelMeeting } from "../controllers/meeting.controller";
-import { authenticate } from "../middleware/auth.middleware";
+import { createMeeting, getMyMeetings, cancelMeeting } from "../controllers/meeting.controller.js";
+import { authenticate } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

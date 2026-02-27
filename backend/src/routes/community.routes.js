@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { getPosts, createPost, getPostById, addComment, toggleLikePost, toggleSavePost } from "../controllers/community.controller";
-import { authenticate } from "../middleware/auth.middleware";
+import { getPosts, createPost, getPostById, addComment, toggleLikePost, toggleSavePost } from "../controllers/community.controller.js";
+import { authenticate } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

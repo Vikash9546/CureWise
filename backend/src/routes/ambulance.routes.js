@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { requestAmbulance, getMyRequests, updateStatus, getAllRequests, cancelRequest } from "../controllers/ambulance.controller";
-import { authenticate, authorize } from "../middleware/auth.middleware";
+import { requestAmbulance, getMyRequests, updateStatus, getAllRequests, cancelRequest } from "../controllers/ambulance.controller.js";
+import { authenticate, authorize } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

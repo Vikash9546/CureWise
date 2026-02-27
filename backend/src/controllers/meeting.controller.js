@@ -1,9 +1,9 @@
-import prisma from "../utils/prisma";
+import prisma from "../utils/prisma.js";
 
 // Jitsi Meet deep-link: opens a custom room instantly for both participants
-const generateMeetLink = (): string => {
+const generateMeetLink = () => {
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    const segment = (len: number) => Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+    const segment = (len) => Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
     return `https://meet.jit.si/Appointly_Room_${segment(8)}`;
 };
 

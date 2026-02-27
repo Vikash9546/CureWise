@@ -163,7 +163,6 @@ export default function Register() {
                             theme="outline"
                             shape="pill"
                             size="large"
-                            width="100%"
                         />
                     </div>
                 </form>

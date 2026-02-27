@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "Appointment Booking System Backend",
     "main": "src/index.js",
+    "type": "module",
     "scripts": {
         "dev": "nodemon src/index.js",
         "build": "tsc",

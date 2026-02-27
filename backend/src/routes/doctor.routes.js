@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { createAppointment, getMyAppointments, cancelAppointment, getAllAppointments, getAllDoctors, getDoctorById } from "../controllers/doctor.controller";
-import { createRazorpayOrder, verifyRazorpayPayment } from "../controllers/razorpay.controller";
-import { authenticate, authorize } from "../middleware/auth.middleware";
+import { createAppointment, getMyAppointments, cancelAppointment, getAllAppointments, getAllDoctors, getDoctorById } from "../controllers/doctor.controller.js";
+import { createRazorpayOrder, verifyRazorpayPayment } from "../controllers/razorpay.controller.js";
+import { authenticate, authorize } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

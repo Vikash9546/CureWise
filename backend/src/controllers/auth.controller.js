@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import prisma from "../utils/prisma";
+import prisma from "../utils/prisma.js";
 import { OAuth2Client } from "google-auth-library";
 
 // Use placeholder for now. The user will replace this in .env

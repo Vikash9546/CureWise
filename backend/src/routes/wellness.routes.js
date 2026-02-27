@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { getWellnessPlans, createWellnessPlan, updateWellnessPlan } from "../controllers/wellness.controller";
-import { authenticate } from "../middleware/auth.middleware";
+import { getWellnessPlans, createWellnessPlan, updateWellnessPlan } from "../controllers/wellness.controller.js";
+import { authenticate } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

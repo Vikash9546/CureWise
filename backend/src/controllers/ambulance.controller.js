@@ -1,4 +1,4 @@
-import prisma from "../utils/prisma";
+import prisma from "../utils/prisma.js";
 
 export const requestAmbulance = async (req, res) => {
     const userId = req.user.id;

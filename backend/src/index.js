@@ -1,12 +1,12 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import authRoutes from "./routes/auth.routes";
-import doctorRoutes from "./routes/doctor.routes";
-import ambulanceRoutes from "./routes/ambulance.routes";
-import meetingRoutes from "./routes/meeting.routes";
-import communityRoutes from "./routes/community.routes";
-import wellnessRoutes from "./routes/wellness.routes";
+import authRoutes from "./routes/auth.routes.js";
+import doctorRoutes from "./routes/doctor.routes.js";
+import ambulanceRoutes from "./routes/ambulance.routes.js";
+import meetingRoutes from "./routes/meeting.routes.js";
+import communityRoutes from "./routes/community.routes.js";
+import wellnessRoutes from "./routes/wellness.routes.js";
 
 dotenv.config({ override: true });
 

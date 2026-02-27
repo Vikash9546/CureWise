@@ -3,7 +3,7 @@ import {
     Activity, Apple, Brain, Calendar, CheckCircle2, ChevronRight,
     Clock, Coffee, Droplets, Flame, Heart, Moon, Plus,
     RefreshCw, Shield, Sparkles, Star, Sun, Target,
-    TrendingUp, User, Wind, Zap, Lock, Info, ArrowLeft, Trophy
+    TrendingUp, User, Wind, Zap, Lock as LockIcon, Info, ArrowLeft, Trophy
 } from 'lucide-react';
 import { useUserData } from '../context/UserDataContext';
 import { useAuth } from '../context/AuthContext';
@@ -118,7 +118,7 @@ export default function WellnessPlans() {
             <div className="min-h-[80vh] flex items-center justify-center bg-[#f8f9f4]">
                 <div className="text-center bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-2xl max-w-lg">
                     <div className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center text-emerald-600 mx-auto mb-8">
-                        <Lock className="w-10 h-10" />
+                        <LockIcon className="w-10 h-10" />
                     </div>
                     <h2 className="text-3xl font-bold text-slate-900 mb-4 font-outfit">Exclusive Access</h2>
                     <p className="text-slate-500 font-medium mb-8 leading-relaxed">

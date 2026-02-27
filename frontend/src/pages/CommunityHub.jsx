@@ -3,7 +3,7 @@ import {
     MessageSquare, Star, Zap, Users, Search, Plus, ThumbsUp, MessageCircle,
     Share2, Award, TrendingUp, ShieldCheck, Flag, X, ChevronDown, ChevronUp,
     Flame, Trophy, Filter, Check, Bell, BookOpen, Leaf, Brain, Salad, Dumbbell,
-    Heart, Eye, EyeOff, Send, MoreHorizontal, Bookmark, BadgeCheck, Trash2
+    Heart, Eye, EyeOff, Send, MoreHorizontal, Bookmark, BadgeCheck, Trash2, Lock as LockIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -478,7 +478,7 @@ export default function CommunityHub() {
             <div className="min-h-screen flex items-center justify-center bg-[#f8f9f4] -mt-8 -mx-4 px-4">
                 <div className="text-center bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-2xl max-w-lg transition-all animate-in fade-in zoom-in duration-500">
                     <div className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center text-emerald-600 mx-auto mb-8 shadow-inner">
-                        <Lock className="w-10 h-10" />
+                        <LockIcon className="w-10 h-10" />
                     </div>
                     <h2 className="text-4xl font-bold text-slate-900 mb-4 font-outfit">Community <span className="text-emerald-500 italic">Sanctuary</span></h2>
                     <p className="text-slate-500 font-medium mb-10 leading-relaxed text-lg">

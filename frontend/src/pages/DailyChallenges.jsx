@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Zap, Target, Award, Flame, Calendar, CheckCircle2, Trophy, ArrowRight, Wind, Coffee, Plus, Lock } from 'lucide-react';
+import { Zap, Target, Award, Flame, Calendar, CheckCircle2, Trophy, ArrowRight, Wind, Coffee, Plus, Lock as LockIcon } from 'lucide-react';
 import { useUserData, BADGE_DEFS } from '../context/UserDataContext';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
@@ -110,7 +110,7 @@ export default function DailyChallenges() {
                             </div>
                         ) : (
                             <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 flex items-center gap-4">
-                                <Lock className="w-6 h-6 text-emerald-500 shrink-0" />
+                                <LockIcon className="w-6 h-6 text-emerald-500 shrink-0" />
                                 <div>
                                     <p className="font-bold text-emerald-800">Log in to track your progress</p>
                                     <p className="text-sm text-emerald-600 font-medium">Your streak, points, and badges are saved to your account.</p>
@@ -208,7 +208,7 @@ export default function DailyChallenges() {
 
                                     {!user ? (
                                         <Link to="/login" className="flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-emerald-600 transition-colors">
-                                            <Lock className="w-3.5 h-3.5" /> Log in to join
+                                            <LockIcon className="w-3.5 h-3.5" /> Log in to join
                                         </Link>
                                     ) : completed ? (
                                         <span className="text-xs font-black text-emerald-600">🏅 Done!</span>

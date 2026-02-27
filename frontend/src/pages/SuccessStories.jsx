@@ -5,7 +5,7 @@ import { useUserData } from '../context/UserDataContext';
 import {
     Heart, ChevronRight, Star, Plus, Image as ImageIcon,
     CheckCircle2, Quote, Sparkles, X, Zap, Award,
-    BookOpen, Users, TrendingUp, Shield, Share2, Bookmark, ShieldCheck, Lock
+    BookOpen, Users, TrendingUp, Shield, Share2, Bookmark, ShieldCheck, Lock as LockIcon
 } from 'lucide-react';
 
 // ── Category helpers ─────────────────────────────────────────
@@ -549,7 +549,7 @@ export default function SuccessStories() {
             <div className="min-h-screen flex items-center justify-center bg-[#f8f9f4] -mt-8 -mx-4 px-4 py-20">
                 <div className="text-center bg-white p-12 rounded-[3.5rem] border border-slate-100 shadow-2xl max-w-lg transition-all animate-in fade-in zoom-in duration-500">
                     <div className="w-20 h-20 bg-emerald-100 rounded-3xl flex items-center justify-center text-emerald-600 mx-auto mb-8 shadow-inner">
-                        <Lock className="w-10 h-10" />
+                        <LockIcon className="w-10 h-10" />
                     </div>
                     <h2 className="text-4xl font-bold text-slate-900 mb-4 font-outfit">Healing <span className="text-emerald-500 italic">Vault</span></h2>
                     <p className="text-slate-500 font-medium mb-10 leading-relaxed text-lg">

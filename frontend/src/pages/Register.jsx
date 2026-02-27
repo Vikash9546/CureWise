@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock as LockIcon, Loader2 } from 'lucide-react';
 
 export default function Register() {
     const [email, setEmail] = useState('');
@@ -126,7 +126,7 @@ export default function Register() {
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 ml-1">Password</label>
                         <div className="relative group">
-                            <Lock className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-600 transition-colors" />
+                            <LockIcon className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-600 transition-colors" />
                             <input
                                 type="password"
                                 required

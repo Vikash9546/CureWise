@@ -401,9 +401,8 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
                         <div className="md:col-span-1">
-                            <Link to="/" className="text-xl font-bold flex items-center gap-2 text-slate-900 mb-8">
-                                <Leaf className="w-6 h-6 text-emerald-500" />
-                                <span className="tracking-tight font-playfair">NatureWellness</span>
+                            <Link to="/" className="flex items-center gap-3 mb-8 group">
+                                <img src="/logo.png" alt="CureWise Logo" className="h-12 w-auto object-contain" />
                             </Link>
                             <p className="text-slate-400 text-sm leading-relaxed font-medium mb-8">
                                 Redefining medical care through the lens of holistic balance and natural harmony. Your health is our sanctuary.
@@ -465,10 +464,10 @@ export default function HomePage() {
 
                     <div className="pt-10 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
                         <p className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
-                            © 2026 NatureWellness Medical Group. All rights reserved.
+                            © 2026 CureWise Medical Group. All rights reserved.
                         </p>
                         <div className="flex gap-8 text-slate-400">
-                            <a href="mailto:support@naturewellness.com" className="hover:text-emerald-500 transition-colors"><Mail className="w-4 h-4" /></a>
+                            <a href="mailto:support@curewise.com" className="hover:text-emerald-500 transition-colors"><Mail className="w-4 h-4" /></a>
                             <a href="tel:+1234567890" className="hover:text-emerald-500 transition-colors"><Phone className="w-4 h-4" /></a>
                         </div>
                     </div>

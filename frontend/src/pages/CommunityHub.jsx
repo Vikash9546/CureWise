@@ -495,7 +495,7 @@ export default function CommunityHub() {
     const fetchPosts = async () => {
         try {
             const { data } = await api.get('/community');
-            setPosts(data.map(p => ({
+            const fetchedPosts = data.map(p => ({
                 ...p,
                 likes: p.likesCount,
                 isLiked: ud.isPostLiked(p.id),
@@ -506,9 +506,11 @@ export default function CommunityHub() {
                     author: c.author.username || c.author.firstName || 'Anonymous',
                     time: new Date(c.createdAt).toLocaleDateString()
                 }))
-            })));
+            }));
+            setPosts([...fetchedPosts, ...INITIAL_POSTS]);
         } catch (error) {
             showToast('Failed to fetch posts', 'info');
+            setPosts(INITIAL_POSTS); // Fallback to initial posts if API fails
         } finally {
             setLoading(false);
         }

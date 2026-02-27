@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import api from '../api';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, UserPlus, Loader2, Shield, AtSign } from 'lucide-react';
+import { Mail, Lock, Loader2 } from 'lucide-react';
 
 export default function Register() {
     const [email, setEmail] = useState('');
@@ -70,34 +70,6 @@ export default function Register() {
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-3">
-                        <label className="text-sm font-bold text-slate-700 ml-1">I am a...</label>
-                        <div className="grid grid-cols-2 gap-4">
-                            <button
-                                type="button"
-                                onClick={() => setRole('CUSTOMER')}
-                                className={`py-3 px-4 rounded-xl border text-sm flex items-center justify-center gap-2 transition-all duration-300 font-bold ${role === 'CUSTOMER'
-                                    ? 'bg-violet-600 text-white border-violet-600 shadow-lg shadow-violet-500/20'
-                                    : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100'
-                                    }`}
-                            >
-                                <UserPlus className="w-4 h-4" />
-                                Customer
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setRole('ADMIN')}
-                                className={`py-3 px-4 rounded-xl border text-sm flex items-center justify-center gap-2 transition-all duration-300 font-bold ${role === 'ADMIN'
-                                    ? 'bg-violet-600 text-white border-violet-600 shadow-lg shadow-violet-500/20'
-                                    : 'bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100'
-                                    }`}
-                            >
-                                <Shield className="w-4 h-4" />
-                                Admin
-                            </button>
-                        </div>
-                    </div>
-
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700 ml-1">First Name</label>

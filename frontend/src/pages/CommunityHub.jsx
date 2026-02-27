@@ -732,8 +732,28 @@ export default function CommunityHub() {
                     {/* ── Main Feed ── */}
                     <main className="flex-1 min-w-0 space-y-5">
                         {loading ? (
-                            <div className="py-20 flex justify-center bg-white rounded-3xl border border-slate-100 shadow-sm">
-                                <div className="w-10 h-10 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+                            <div className="space-y-6">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="bg-white rounded-[2.5rem] border border-slate-100 p-8 animate-pulse shadow-sm">
+                                        <div className="flex gap-3 items-start mb-6">
+                                            <div className="w-11 h-11 bg-emerald-50 rounded-2xl shrink-0"></div>
+                                            <div className="space-y-2 flex-1 mt-1.5">
+                                                <div className="h-3.5 bg-slate-200 rounded-full w-32"></div>
+                                                <div className="h-2.5 bg-slate-100 rounded-full w-24"></div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3 mb-8">
+                                            <div className="h-5 bg-slate-200 rounded-full w-3/4"></div>
+                                            <div className="h-4 bg-slate-100 rounded-full w-full"></div>
+                                            <div className="h-4 bg-slate-100 rounded-full w-5/6"></div>
+                                            <div className="h-4 bg-slate-100 rounded-full w-4/6"></div>
+                                        </div>
+                                        <div className="flex gap-4 pt-5 border-t border-slate-50">
+                                            <div className="w-14 h-9 bg-emerald-50/50 rounded-xl"></div>
+                                            <div className="w-14 h-9 bg-slate-50 rounded-xl"></div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
                             <>

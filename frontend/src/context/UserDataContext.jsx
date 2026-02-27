@@ -272,6 +272,7 @@ export function UserDataProvider({ children }) {
             getChallengeProgress: (id) => profile.challengeProgress[id] || 0,
             joinChallenge: (id) => persist(prev => ({ ...prev, challengesJoined: [...prev.challengesJoined, id] })),
             logChallengeDay: (id) => persist(prev => ({ ...prev, challengeProgress: { ...prev.challengeProgress, [id]: (prev.challengeProgress[id] || 0) + 1 } })),
+            registerEvent: (event) => persist(prev => ({ ...prev, registeredEvents: [...prev.registeredEvents, event] })),
         }}>
             {children}
         </UserDataContext.Provider>

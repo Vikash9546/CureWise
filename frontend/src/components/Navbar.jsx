@@ -64,11 +64,12 @@ export default function Navbar() {
         <>
             <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 py-3 md:py-4 border-b border-slate-100 shadow-sm">
                 <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
-                    <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-lg md:text-xl font-bold flex items-center gap-2 text-slate-900 group shrink-0">
-                        <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
-                            <Leaf className="w-4 h-4 md:w-6 md:h-6" />
-                        </div>
-                        <span className="tracking-tight font-playfair whitespace-nowrap">CureWise</span>
+                    <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center group shrink-0">
+                        <img
+                            src="/logo.png"
+                            alt="CureWise Logo"
+                            className="h-12 md:h-16 w-auto object-contain group-hover:scale-105 transition-transform"
+                        />
                     </Link>
 
                     <div className="hidden lg:flex items-center gap-10">

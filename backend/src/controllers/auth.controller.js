@@ -78,6 +78,7 @@ export const login = async (req, res) => {
                 lastStreakDate: user.lastStreakDate,
                 likedPostIds: user.likedPostIds,
                 savedPostIds: user.savedPostIds,
+                registeredEvents: user.registeredEvents,
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
                 activeWellnessPlan: await prisma.wellnessPlan.findFirst({
                     where: { userId: user.id, isActive: true },
@@ -109,6 +110,7 @@ export const getMe = async (req, res) => {
             lastStreakDate: user.lastStreakDate,
             likedPostIds: user.likedPostIds,
             savedPostIds: user.savedPostIds,
+            registeredEvents: user.registeredEvents,
             name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
             activeWellnessPlan: await prisma.wellnessPlan.findFirst({
                 where: { userId: user.id, isActive: true },
@@ -121,7 +123,7 @@ export const getMe = async (req, res) => {
 };
 
 export const updateProfile = async (req, res) => {
-    const { username, firstName, lastName, points, streak, badges, lastStreakDate, likedPostIds, savedPostIds } = req.body;
+    const { username, firstName, lastName, points, streak, badges, lastStreakDate, likedPostIds, savedPostIds, registeredEvents } = req.body;
 
     try {
         // Check if username is already taken by another user
@@ -144,6 +146,7 @@ export const updateProfile = async (req, res) => {
                 ...(lastStreakDate !== undefined && { lastStreakDate: lastStreakDate ? new Date(lastStreakDate) : null }),
                 ...(likedPostIds !== undefined && { likedPostIds }),
                 ...(savedPostIds !== undefined && { savedPostIds }),
+                ...(registeredEvents !== undefined && { registeredEvents }),
             },
         });
 
@@ -160,6 +163,7 @@ export const updateProfile = async (req, res) => {
             lastStreakDate: updatedUser.lastStreakDate,
             likedPostIds: updatedUser.likedPostIds,
             savedPostIds: updatedUser.savedPostIds,
+            registeredEvents: updatedUser.registeredEvents,
             name: updatedUser.username || (updatedUser.firstName && updatedUser.lastName ? `${updatedUser.firstName} ${updatedUser.lastName}` : updatedUser.email),
             activeWellnessPlan: await prisma.wellnessPlan.findFirst({
                 where: { userId: updatedUser.id, isActive: true },
@@ -221,6 +225,7 @@ export const googleLogin = async (req, res) => {
                 lastStreakDate: user.lastStreakDate,
                 likedPostIds: user.likedPostIds,
                 savedPostIds: user.savedPostIds,
+                registeredEvents: user.registeredEvents,
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
                 activeWellnessPlan: await prisma.wellnessPlan.findFirst({
                     where: { userId: user.id, isActive: true },

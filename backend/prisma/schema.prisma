@@ -37,6 +37,7 @@ model User {
   // Tracking arrays for quick lookup
   likedPostIds        String[]             @default([])
   savedPostIds        String[]             @default([])
+  registeredEvents    Json[]               @default([])
   
   createdAt           DateTime?            @default(now())
 }

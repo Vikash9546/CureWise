@@ -77,6 +77,7 @@ export function UserDataProvider({ children }) {
             lastStreakDate: user.lastStreakDate,
             likedPosts: user.likedPostIds || [],
             savedPosts: user.savedPostIds || [],
+            registeredEvents: user.registeredEvents || [],
         }));
     }, [user]);
 
@@ -107,7 +108,8 @@ export function UserDataProvider({ children }) {
                 badges: final.badges,
                 lastStreakDate: final.lastStreakDate,
                 likedPostIds: final.likedPosts,
-                savedPostIds: final.savedPosts
+                savedPostIds: final.savedPosts,
+                registeredEvents: final.registeredEvents
             });
             // Update AuthContext to keep user object in sync
             login(localStorage.getItem('token'), data);

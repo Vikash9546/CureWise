@@ -65,9 +65,14 @@ export default function AmbulanceBooking() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50">
-                <div className="w-10 h-10 border-3 border-red-500/20 border-t-red-600 rounded-full animate-spin"></div>
-                <p className="text-slate-500 text-sm animate-pulse font-medium">Connecting to emergency fleet...</p>
+            <div className="max-w-5xl mx-auto p-8 animate-pulse">
+                <div className="flex justify-center mb-10"><div className="w-20 h-20 bg-red-50 rounded-full"></div></div>
+                <div className="h-10 bg-slate-200 rounded-full w-1/3 mx-auto mb-4"></div>
+                <div className="h-4 bg-slate-100 rounded-full w-1/2 mx-auto mb-16"></div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="bg-white border border-slate-100 h-[600px] rounded-2xl shadow-sm"></div>
+                    <div className="bg-white border border-slate-100 h-[600px] rounded-2xl shadow-sm"></div>
+                </div>
             </div>
         );
     }

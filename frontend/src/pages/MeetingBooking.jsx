@@ -56,9 +56,16 @@ export default function MeetingBooking() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-slate-50">
-                <div className="w-10 h-10 border-3 border-blue-500/20 border-t-blue-600 rounded-full animate-spin"></div>
-                <p className="text-slate-500 text-sm animate-pulse font-medium">Syncing virtual rooms...</p>
+            <div className="max-w-6xl mx-auto p-8 animate-pulse">
+                <div className="flex justify-center mb-10"><div className="w-20 h-20 bg-blue-50 rounded-full"></div></div>
+                <div className="h-10 bg-slate-200 rounded-full w-1/3 mx-auto mb-4"></div>
+                <div className="h-4 bg-slate-100 rounded-full w-1/2 mx-auto mb-16"></div>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <div className="lg:col-span-4 bg-white border border-slate-100 h-[600px] rounded-2xl shadow-sm"></div>
+                    <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[1, 2, 3, 4].map(i => <div key={i} className="bg-white border text-center border-slate-100 h-[250px] rounded-2xl shadow-sm"></div>)}
+                    </div>
+                </div>
             </div>
         );
     }

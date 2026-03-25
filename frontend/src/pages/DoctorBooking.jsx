@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Heart, Calendar, Clock, User, FileText, CheckCircle2, ChevronDown, Search, Filter, Star, CreditCard, X, Building2 as Hospital, Globe, MapPin as MapPinIcon, Navigation2, Loader2, Trash2 } from 'lucide-react';
+import { Heart, Calendar, Clock, User, FileText, CheckCircle2, ChevronDown, Search, Filter, Star, CreditCard, X, Building2 as Hospital, Globe, MapPin as MapPinIcon, Navigation2, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
@@ -21,6 +21,7 @@ export default function DoctorBooking() {
     const [selectedSpecialty, setSelectedSpecialty] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
     // Booking Flow States
     const [step, setStep] = useState(1); // 1: List, 2: Form, 3: Payment, 4: Success
@@ -110,11 +111,12 @@ export default function DoctorBooking() {
         }
     };
 
-    const handleDeleteAppointment = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this booking history?")) return;
+    const handleDeleteAppointment = async () => {
+        const id = deleteModal.id;
         try {
             await api.delete(`/doctors/${id}`);
             toast.success("History deleted");
+            setDeleteModal({ isOpen: false, id: null });
             fetchAppointments();
         } catch (error) {
             toast.error("Failed to delete history");
@@ -406,7 +408,7 @@ export default function DoctorBooking() {
                                         <div className="flex items-center gap-2">
                                             <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full">{apt.status}</span>
                                             <button 
-                                                onClick={() => handleDeleteAppointment(apt.id)}
+                                                onClick={() => setDeleteModal({ isOpen: true, id: apt.id })}
                                                 className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
                                                 title="Delete History"
                                             >
@@ -458,6 +460,34 @@ export default function DoctorBooking() {
                             </p>
                             <button onClick={() => { handleInitiateBooking(selectedDetailDoctor); setSelectedDetailDoctor(null); }} className="w-full py-5 rounded-2xl bg-slate-900 text-white font-bold text-lg hover:bg-violet-600 transition-all flex items-center justify-center gap-3">
                                 <Calendar className="w-6 h-6" /> Book Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Delete Confirmation Modal */}
+            {deleteModal.isOpen && (
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
+                    <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative animate-in fade-in zoom-in duration-300">
+                        <div className="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center mb-6 border border-rose-100 text-rose-500 mx-auto">
+                            <AlertTriangle className="w-8 h-8" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">Delete Booking?</h2>
+                        <p className="text-slate-500 text-center mb-8 text-sm">This will permanently remove this appointment from your history. This action cannot be undone.</p>
+                        
+                        <div className="flex gap-4">
+                            <button 
+                                onClick={() => setDeleteModal({ isOpen: false, id: null })}
+                                className="flex-1 py-4 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={handleDeleteAppointment}
+                                className="flex-1 py-4 rounded-xl bg-rose-500 text-white font-bold hover:bg-rose-600 transition-all shadow-lg shadow-rose-200"
+                            >
+                                Yes, Delete
                             </button>
                         </div>
                     </div>

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createAppointment, getMyAppointments, cancelAppointment, getAllAppointments, getAllDoctors, getDoctorById } from "../controllers/doctor.controller.js";
+import { createAppointment, getMyAppointments, cancelAppointment, deleteAppointment, getAllAppointments, getAllDoctors, getDoctorById } from "../controllers/doctor.controller.js";
 import { createRazorpayOrder, verifyRazorpayPayment } from "../controllers/razorpay.controller.js";
 import { authenticate, authorize } from "../middleware/auth.middleware.js";
 
@@ -9,7 +9,7 @@ router.get("/", authenticate, getAllDoctors);
 router.post("/", authenticate, createAppointment);
 router.get("/my", authenticate, getMyAppointments);
 router.get("/:id", authenticate, getDoctorById);
-router.patch("/:id/cancel", authenticate, cancelAppointment);
+router.delete("/:id", authenticate, deleteAppointment);
 router.get("/all", authenticate, authorize(["ADMIN"]), getAllAppointments);
 
 // Razorpay Routes

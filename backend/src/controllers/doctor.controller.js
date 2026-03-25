@@ -138,4 +138,24 @@ export const getAllAppointments = async (req, res) => {
     }
 };
 
+export const deleteAppointment = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    try {
+        const appointment = await prisma.doctorAppointment.findUnique({ where: { id } });
+        if (!appointment) return res.status(404).json({ message: "Appointment not found" });
+        
+        // Only the user who made the booking or an admin can delete it
+        if (appointment.userId !== userId && req.user.role !== "ADMIN") {
+            return res.status(403).json({ message: "Forbidden" });
+        }
+
+        await prisma.doctorAppointment.delete({ where: { id } });
+        res.json({ message: "Appointment deleted successfully" });
+    } catch (error) {
+        console.error("Delete appointment error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 export { SPECIALTIES };

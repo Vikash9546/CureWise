@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Heart, Calendar, Clock, User, FileText, CheckCircle2, ChevronDown, Search, Filter, Star, CreditCard, X, Building2 as Hospital, Globe, MapPin as MapPinIcon, Navigation2, Loader2 } from 'lucide-react';
+import { Heart, Calendar, Clock, User, FileText, CheckCircle2, ChevronDown, Search, Filter, Star, CreditCard, X, Building2 as Hospital, Globe, MapPin as MapPinIcon, Navigation2, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
@@ -107,6 +107,17 @@ export default function DoctorBooking() {
             toast.error(error.response?.data?.message || 'Booking failed');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteAppointment = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this booking history?")) return;
+        try {
+            await api.delete(`/doctors/${id}`);
+            toast.success("History deleted");
+            fetchAppointments();
+        } catch (error) {
+            toast.error("Failed to delete history");
         }
     };
 
@@ -392,7 +403,16 @@ export default function DoctorBooking() {
                                             <h3 className="font-bold text-slate-900">{apt.doctor?.name}</h3>
                                             <p className="text-violet-600 text-xs">{apt.specialty}</p>
                                         </div>
-                                        <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full">{apt.status}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full">{apt.status}</span>
+                                            <button 
+                                                onClick={() => handleDeleteAppointment(apt.id)}
+                                                className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                                title="Delete History"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-slate-50 text-xs flex justify-between">
                                         <span className="text-slate-500 italic">{new Date(apt.appointmentDate).toLocaleDateString()}</span>

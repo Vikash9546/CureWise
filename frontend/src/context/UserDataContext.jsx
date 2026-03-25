@@ -64,6 +64,7 @@ export function UserDataProvider({ children }) {
     const [profile, setProfileState] = useState(DEFAULT_PROFILE);
     const [newBadges, setNewBadges] = useState([]);
     const [appointments, setAppointments] = useState([]);
+    const [ambulanceRequests, setAmbulanceRequests] = useState([]);
 
     // Sync profile when user changes
     useEffect(() => {
@@ -82,6 +83,7 @@ export function UserDataProvider({ children }) {
             registeredEvents: user.registeredEvents || [],
         }));
         fetchAppointments();
+        fetchAmbulanceRequests();
     }, [user, userId]);
 
     const fetchAppointments = useCallback(async () => {
@@ -113,6 +115,37 @@ export function UserDataProvider({ children }) {
             toast.error("Failed to remove history");
         }
     }, [fetchAppointments]);
+
+    const fetchAmbulanceRequests = useCallback(async () => {
+        if (!userId) return;
+        try {
+            const { data } = await api.get('/ambulance/my');
+            setAmbulanceRequests(data);
+        } catch (error) {
+            console.error("Fetch ambulance requests failed:", error);
+        }
+    }, [userId]);
+
+    const cancelAmbulanceRequest = useCallback(async (id) => {
+        try {
+            await api.patch(`/ambulance/${id}/cancel`);
+            fetchAmbulanceRequests();
+            toast.success("Request cancelled");
+        } catch (error) {
+            toast.error("Failed to cancel request");
+        }
+    }, [fetchAmbulanceRequests]);
+
+    const deleteAmbulanceRequest = useCallback(async (id) => {
+        try {
+            await api.delete(`/ambulance/${id}`);
+            fetchAmbulanceRequests();
+            toast.success("History removed");
+        } catch (error) {
+            toast.error("Failed to remove history");
+        }
+    }, [fetchAmbulanceRequests]);
+
 
     // Persist to backend and update local state
     const persist = useCallback(async (updater) => {
@@ -311,7 +344,12 @@ export function UserDataProvider({ children }) {
             appointments,
             fetchAppointments,
             cancelAppointment,
-            deleteAppointmentRecord
+            deleteAppointmentRecord,
+            ambulanceRequests,
+            fetchAmbulanceRequests,
+            cancelAmbulanceRequest,
+            deleteAmbulanceRequest
+
         }}>
             {children}
         </UserDataContext.Provider>

@@ -5,8 +5,9 @@ import {
     User, Mail, Shield, ShieldCheck, Flame, Zap, Award,
     MessageSquare, Heart, Bookmark, History, Target,
     ExternalLink, ChevronRight, Sparkles, Filter,
-    Calendar, Video, Leaf, Trash2, AtSign, Edit3, Check, X, Loader2, LogOut, AlertTriangle, XCircle
+    Calendar, Video, Leaf, Trash2, AtSign, Edit3, Check, X, Loader2, LogOut, AlertTriangle, XCircle, MapPin as MapPinIcon, Phone
 } from 'lucide-react';
+
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../api';
@@ -359,7 +360,7 @@ export default function Profile() {
                             <div className="space-y-8 animate-in fade-in duration-500">
                                 <div>
                                     <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-6">Registered Wellness Experiences</h4>
-                                    <div className="grid grid-cols-1 gap-6">
+                                <div className="space-y-4">
                                         {(profile.registeredEvents || []).length > 0 ? (
                                             profile.registeredEvents.map((event, idx) => (
                                                 <div key={idx} className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col md:flex-row gap-6 items-center group hover:border-emerald-500/20 transition-all">
@@ -387,6 +388,82 @@ export default function Profile() {
                                         )}
                                     </div>
                                 </div>
+
+                                <div className="pt-8 border-t border-slate-100">
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500 mb-6 flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Live Emergency Requests
+                                    </h4>
+                                    <div className="space-y-4">
+                                        {ud.ambulanceRequests && ud.ambulanceRequests.length > 0 ? (
+                                            ud.ambulanceRequests.map((req, i) => (
+                                                <div key={req.id || i} className="p-6 bg-white rounded-3xl border border-slate-100 group hover:border-red-100 transition-all shadow-sm relative overflow-hidden">
+                                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex gap-4">
+                                                            <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 border border-red-100 shrink-0">
+                                                                <AlertTriangle className="w-6 h-6" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-slate-900 group-hover:text-red-600 transition-colors uppercase text-sm tracking-wide">{req.emergencyType}</p>
+                                                                <p className="text-[10px] text-slate-400 font-bold mt-1 tracking-widest uppercase">{new Date(req.createdAt).toLocaleString()}</p>
+                                                                <div className="mt-3 space-y-1.5">
+                                                                    <p className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                                                                        <MapPinIcon className="w-3.5 h-3.5 text-slate-400" /> {req.location}
+                                                                    </p>
+                                                                    <p className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                                                                        <Phone className="w-3.5 h-3.5 text-slate-400" /> {req.contactNumber}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col items-end gap-2">
+                                                            <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full border ${req.status === 'CANCELLED' ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-red-50 text-red-600 border-red-100'}`}>
+                                                                {req.status}
+                                                            </span>
+                                                            <div className="flex gap-1">
+                                                                {req.status === 'REQUESTED' && (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setConfirmModal({
+                                                                                isOpen: true,
+                                                                                title: 'Cancel Emergency?',
+                                                                                message: 'Are you sure you want to cancel this emergency request?',
+                                                                                type: 'warning',
+                                                                                onConfirm: () => ud.cancelAmbulanceRequest(req.id)
+                                                                            });
+                                                                        }}
+                                                                        className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setConfirmModal({
+                                                                            isOpen: true,
+                                                                            title: 'Remove Request?',
+                                                                            message: 'This will permanently remove this emergency record from your history.',
+                                                                            type: 'danger',
+                                                                            onConfirm: () => ud.deleteAmbulanceRequest(req.id)
+                                                                        });
+                                                                    }}
+                                                                    className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-12 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                                                <p className="text-slate-400 font-medium italic">No emergency requests found</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
 
                                 <div className="pt-8 border-t border-slate-100">
                                     <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Medical Doctor Appointments</h4>

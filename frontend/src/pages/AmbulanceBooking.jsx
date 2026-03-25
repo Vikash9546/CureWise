@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Truck, MapPin, Phone, AlertTriangle, AlertCircle, XCircle } from 'lucide-react';
+import { Truck, MapPin, Phone, AlertTriangle, AlertCircle, XCircle, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useUserData } from '../context/UserDataContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
@@ -10,7 +11,7 @@ const EMERGENCIES = ["Accident", "Heart Attack", "Stroke", "Pregnancy", "Critica
 export default function AmbulanceBooking() {
     const { user, loading: authLoading } = useAuth();
     const navigate = useNavigate();
-    const [requests, setRequests] = useState([]);
+    const { ambulanceRequests, fetchAmbulanceRequests, cancelAmbulanceRequest, deleteAmbulanceRequest } = useUserData();
     const [loading, setLoading] = useState(false);
     const [confirmCancelId, setConfirmCancelId] = useState(null);
 
@@ -24,17 +25,8 @@ export default function AmbulanceBooking() {
 
     useEffect(() => {
         if (!authLoading && !user) navigate('/login');
-        else if (user) fetchRequests();
-    }, [user, authLoading, navigate]);
-
-    const fetchRequests = async () => {
-        try {
-            const { data } = await api.get('/ambulance/my');
-            setRequests(data);
-        } catch (error) {
-            console.error('Error fetching requests', error);
-        }
-    };
+        else if (user) fetchAmbulanceRequests();
+    }, [user, authLoading, navigate, fetchAmbulanceRequests]);
 
     const handleRequest = async (e) => {
         e.preventDefault();
@@ -42,7 +34,7 @@ export default function AmbulanceBooking() {
         try {
             await api.post('/ambulance', formData);
             setFormData({ patientName: '', location: '', contactNumber: '', emergencyType: 'Accident', notes: '' });
-            fetchRequests();
+            fetchAmbulanceRequests();
             toast.success('Ambulance request dispatched!');
         } catch (error) {
             toast.error(error.response?.data?.message || 'Request failed');
@@ -52,16 +44,6 @@ export default function AmbulanceBooking() {
         }
     };
 
-    const handleCancel = async (id) => {
-        try {
-            await api.patch(`/ambulance/${id}/cancel`);
-            fetchRequests();
-            toast.success('Request cancelled successfully');
-        } catch (error) {
-            toast.error('Cancellation failed');
-            console.error('Cancellation failed', error);
-        }
-    };
 
     if (authLoading) {
         return (
@@ -147,27 +129,36 @@ export default function AmbulanceBooking() {
                     </h2>
 
                     <div className="space-y-4">
-                        {requests.length === 0 ? (
+                        {ambulanceRequests.length === 0 ? (
                             <div className="bg-white flex flex-col items-center justify-center p-12 rounded-2xl text-center border-dashed border-2 border-slate-100 shadow-sm">
                                 <Truck className="w-12 h-12 text-slate-200 mb-4" />
                                 <p className="text-slate-400 font-medium">No active ambulance requests.</p>
                             </div>
                         ) : (
-                            requests.map(req => (
-                                <div key={req.id} className="bg-white p-6 rounded-2xl border border-slate-100 border-l-4 border-l-red-600 shadow-md hover:shadow-xl hover:shadow-red-900/5 transition-all">
+                            ambulanceRequests.map(req => (
+                                <div key={req.id} className="bg-white p-6 rounded-2xl border border-slate-100 border-l-4 border-l-red-600 shadow-md hover:shadow-xl hover:shadow-red-900/5 transition-all group">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <h3 className="font-bold text-slate-900 text-lg uppercase tracking-tight">{req.emergencyType} Emergency</h3>
                                             <p className="text-slate-400 text-xs font-semibold">{new Date(req.createdAt).toLocaleString()}</p>
                                         </div>
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${req.status === 'REQUESTED' ? 'bg-amber-50 text-amber-600 border border-amber-100 animate-pulse' :
-                                            req.status === 'DISPATCHED' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                                                req.status === 'ARRIVED' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' :
-                                                    req.status === 'CANCELLED' ? 'bg-slate-50 text-slate-500 border border-slate-200' :
-                                                        'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                                            }`}>
-                                            {req.status}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={() => deleteAmbulanceRequest(req.id)}
+                                                className="p-1.5 text-slate-200 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                title="Delete History"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase ${req.status === 'REQUESTED' ? 'bg-amber-50 text-amber-600 border border-amber-100 animate-pulse' :
+                                                req.status === 'DISPATCHED' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                                                    req.status === 'ARRIVED' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' :
+                                                        req.status === 'CANCELLED' ? 'bg-slate-50 text-slate-500 border border-slate-200' :
+                                                            'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                                }`}>
+                                                {req.status}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="space-y-2 text-sm text-slate-600 font-medium">
                                         <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-red-400" /> {req.location}</p>
@@ -179,7 +170,7 @@ export default function AmbulanceBooking() {
                                             {confirmCancelId === req.id ? (
                                                 <div className="flex gap-2 animate-in slide-in-from-right-2">
                                                     <button onClick={() => setConfirmCancelId(null)} className="flex-1 py-2 rounded-lg bg-slate-100 text-slate-500 text-xs font-bold">No, Keep</button>
-                                                    <button onClick={() => { handleCancel(req.id); setConfirmCancelId(null); }} className="flex-1 py-2 rounded-lg bg-red-600 text-white text-xs font-bold shadow-lg shadow-red-500/20">Yes, Cancel</button>
+                                                    <button onClick={() => { cancelAmbulanceRequest(req.id); setConfirmCancelId(null); }} className="flex-1 py-2 rounded-lg bg-red-600 text-white text-xs font-bold shadow-lg shadow-red-500/20">Yes, Cancel</button>
                                                 </div>
                                             ) : (
                                                 <button
@@ -212,6 +203,7 @@ export default function AmbulanceBooking() {
                         )}
                     </div>
                 </div>
+
             </div>
         </div>
     );

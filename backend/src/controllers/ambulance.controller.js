@@ -96,3 +96,26 @@ export const cancelRequest = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+export const deleteRequest = async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const booking = await prisma.ambulanceBooking.findUnique({ where: { id } });
+        if (!booking) return res.status(404).json({ message: "Request not found" });
+
+        // Only original user or admin can delete
+        if (booking.userId !== userId && req.user.role !== "ADMIN") {
+            return res.status(403).json({ message: "Unauthorized" });
+        }
+
+        await prisma.ambulanceBooking.delete({ where: { id } });
+
+        res.json({ message: "Ambulance request deleted successfully" });
+    } catch (error) {
+        console.error("Delete ambulance request error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+

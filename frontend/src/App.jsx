@@ -7,7 +7,7 @@ import Navbar from './components/Navbar';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import AdminDashboard from './pages/AdminDashboard';
+// import AdminDashboard from './pages/AdminDashboard';
 import HomePage from './pages/HomePage';
 import DoctorBooking from './pages/DoctorBooking';
 import AmbulanceBooking from './pages/AmbulanceBooking';
@@ -92,14 +92,14 @@ function App() {
                                                 </ProtectedRoute>
                                             }
                                         />
-                                        <Route
+                                        {/* <Route
                                             path="/admin"
                                             element={
                                                 <ProtectedRoute roles={['ADMIN']}>
                                                     <AdminDashboard />
                                                 </ProtectedRoute>
                                             }
-                                        />
+                                        /> */}
                                         {/* NatureWellness Core Features */}
                                         <Route path="/ai-chatbot" element={<AIChatbot />} />
                                         <Route path="/symptom-checker" element={<SymptomChecker />} />

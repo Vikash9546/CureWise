@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../context/UserDataContext';
 import {
-    Leaf, User, LogOut, Layout, Menu, ChevronDown, Bot, Activity,
+    Leaf, User, LogOut, Menu, ChevronDown, Bot, Activity,
     Database, BookOpen, Wind, Calculator, Zap, Flower2, X,
     Award, Ambulance, Video
 } from 'lucide-react';
@@ -116,12 +116,12 @@ export default function Navbar() {
                             </div>
                         ))}
 
-                        {user?.role === 'ADMIN' && (
+                        {/* {user?.role === 'ADMIN' && (
                             <Link to="/admin" className="text-slate-600 hover:text-emerald-600 transition-all duration-300 flex items-center gap-2 font-medium">
                                 <Layout className="w-4 h-4" />
                                 Admin
                             </Link>
-                        )}
+                        )} */}
                     </div>
 
                     <div className="flex items-center gap-3 md:gap-6">
@@ -219,11 +219,11 @@ export default function Navbar() {
                                         )}
                                     </div>
                                 ))}
-                                {user?.role === 'ADMIN' && (
+                                {/* {user?.role === 'ADMIN' && (
                                     <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-violet-50 text-violet-700 font-bold mt-4">
                                         <Layout className="w-5 h-5" /> Admin Panel
                                     </Link>
-                                )}
+                                )} */}
                             </div>
 
                             <div className="pt-6 border-t border-slate-100 mt-auto flex flex-col gap-3 shrink-0">

@@ -25,12 +25,7 @@
         "razorpay": "^2.9.6"
     },
     "devDependencies": {
-        "bcryptjs": "^2.4.2",
-        "cors": "^2.8.13",
-        "express": "^4.17.17",
         "jest": "^29.5.3",
-        "jsonwebtoken": "^9.0.2",
-        "node": "^20.4.5",
         "nodemon": "^3.0.1",
         "supertest": "^6.3.3"
     }

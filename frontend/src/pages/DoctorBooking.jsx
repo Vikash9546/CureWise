@@ -16,6 +16,7 @@ export default function DoctorBooking() {
     const [doctors, setDoctors] = useState([]);
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [doctorsLoading, setDoctorsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedSpecialty, setSelectedSpecialty] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);

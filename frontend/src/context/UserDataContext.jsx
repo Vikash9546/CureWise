@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import api from '../api';
+import toast from 'react-hot-toast';
 
 // ── Badge definitions ──────────────────────────────────────────
 export const BADGE_DEFS = [
@@ -62,6 +63,7 @@ export function UserDataProvider({ children }) {
 
     const [profile, setProfileState] = useState(DEFAULT_PROFILE);
     const [newBadges, setNewBadges] = useState([]);
+    const [appointments, setAppointments] = useState([]);
 
     // Sync profile when user changes
     useEffect(() => {
@@ -79,7 +81,38 @@ export function UserDataProvider({ children }) {
             savedPosts: user.savedPostIds || [],
             registeredEvents: user.registeredEvents || [],
         }));
-    }, [user]);
+        fetchAppointments();
+    }, [user, userId]);
+
+    const fetchAppointments = useCallback(async () => {
+        if (!userId) return;
+        try {
+            const { data } = await api.get('/doctors/my');
+            setAppointments(data);
+        } catch (error) {
+            console.error("Fetch appointments failed:", error);
+        }
+    }, [userId]);
+
+    const cancelAppointment = useCallback(async (id) => {
+        try {
+            await api.patch(`/doctors/${id}/cancel`);
+            fetchAppointments();
+            toast.success("Appointment cancelled");
+        } catch (error) {
+            toast.error("Failed to cancel appointment");
+        }
+    }, [fetchAppointments]);
+
+    const deleteAppointmentRecord = useCallback(async (id) => {
+        try {
+            await api.delete(`/doctors/${id}`);
+            fetchAppointments();
+            toast.success("History removed");
+        } catch (error) {
+            toast.error("Failed to remove history");
+        }
+    }, [fetchAppointments]);
 
     // Persist to backend and update local state
     const persist = useCallback(async (updater) => {
@@ -275,6 +308,10 @@ export function UserDataProvider({ children }) {
             joinChallenge: (id) => persist(prev => ({ ...prev, challengesJoined: [...prev.challengesJoined, id] })),
             logChallengeDay: (id) => persist(prev => ({ ...prev, challengeProgress: { ...prev.challengeProgress, [id]: (prev.challengeProgress[id] || 0) + 1 } })),
             registerEvent: (event) => persist(prev => ({ ...prev, registeredEvents: [...prev.registeredEvents, event] })),
+            appointments,
+            fetchAppointments,
+            cancelAppointment,
+            deleteAppointmentRecord
         }}>
             {children}
         </UserDataContext.Provider>

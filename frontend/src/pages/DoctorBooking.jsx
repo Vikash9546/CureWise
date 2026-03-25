@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Heart, Calendar, Clock, User, FileText, CheckCircle2, ChevronDown, Search, Filter, Star, CreditCard, X, Building2 as Hospital, Globe, MapPin as MapPinIcon, Navigation2, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useUserData } from '../context/UserDataContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api';
 
@@ -12,9 +13,8 @@ export default function DoctorBooking() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // States
+    const { appointments, fetchAppointments, cancelAppointment, deleteAppointmentRecord } = useUserData();
     const [doctors, setDoctors] = useState([]);
-    const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(false);
     const [doctorsLoading, setDoctorsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -22,6 +22,7 @@ export default function DoctorBooking() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
+    const [cancelModal, setCancelModal] = useState({ isOpen: false, id: null });
 
     // Booking Flow States
     const [step, setStep] = useState(1); // 1: List, 2: Form, 3: Payment, 4: Success
@@ -63,21 +64,12 @@ export default function DoctorBooking() {
                     limit: 9
                 }
             });
-            setDoctors(data.doctors);
-            setTotalPages(data.totalPages);
+            setDoctors(data.doctors || []);
+            setTotalPages(data.totalPages || 1);
         } catch (error) {
             toast.error('Failed to load doctors');
         } finally {
             setDoctorsLoading(false);
-        }
-    };
-
-    const fetchAppointments = async () => {
-        try {
-            const { data } = await api.get('/doctors/my');
-            setAppointments(data);
-        } catch (error) {
-            console.error('Error fetching appointments', error);
         }
     };
 
@@ -112,15 +104,13 @@ export default function DoctorBooking() {
     };
 
     const handleDeleteAppointment = async () => {
-        const id = deleteModal.id;
-        try {
-            await api.delete(`/doctors/${id}`);
-            toast.success("History deleted");
-            setDeleteModal({ isOpen: false, id: null });
-            fetchAppointments();
-        } catch (error) {
-            toast.error("Failed to delete history");
-        }
+        await deleteAppointmentRecord(deleteModal.id);
+        setDeleteModal({ isOpen: false, id: null });
+    };
+
+    const handleCancelAppointment = async () => {
+        await cancelAppointment(cancelModal.id);
+        setCancelModal({ isOpen: false, id: null });
     };
 
     const resetFlow = () => {
@@ -405,16 +395,26 @@ export default function DoctorBooking() {
                                             <h3 className="font-bold text-slate-900">{apt.doctor?.name}</h3>
                                             <p className="text-violet-600 text-xs">{apt.specialty}</p>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full">{apt.status}</span>
-                                            <button 
-                                                onClick={() => setDeleteModal({ isOpen: true, id: apt.id })}
-                                                className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                                                title="Delete History"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${apt.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-600' : apt.status === 'CANCELLED' ? 'bg-rose-50 text-rose-500' : 'bg-amber-50 text-amber-600'}`}>
+                                                    {apt.status}
+                                                </span>
+                                                {apt.status === 'PENDING' && (
+                                                    <button 
+                                                        onClick={() => setCancelModal({ isOpen: true, id: apt.id })}
+                                                        className="px-2 py-1 bg-rose-50 text-rose-500 rounded-lg text-[9px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    onClick={() => setDeleteModal({ isOpen: true, id: apt.id })}
+                                                    className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                                    title="Delete History"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
                                     </div>
                                     <div className="mt-4 pt-4 border-t border-slate-50 text-xs flex justify-between">
                                         <span className="text-slate-500 italic">{new Date(apt.appointmentDate).toLocaleDateString()}</span>
@@ -488,6 +488,33 @@ export default function DoctorBooking() {
                                 className="flex-1 py-4 rounded-xl bg-rose-500 text-white font-bold hover:bg-rose-600 transition-all shadow-lg shadow-rose-200"
                             >
                                 Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Custom Cancel Confirmation Modal */}
+            {cancelModal.isOpen && (
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
+                    <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative animate-in fade-in zoom-in duration-300">
+                        <div className="w-16 h-16 rounded-2xl bg-amber-50 flex items-center justify-center mb-6 border border-amber-100 text-amber-500 mx-auto">
+                            <XCircle className="w-8 h-8" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">Cancel Appointment?</h2>
+                        <p className="text-slate-500 text-center mb-8 text-sm">Are you sure you want to cancel this booking? You can book again later if needed.</p>
+                        
+                        <div className="flex gap-4">
+                            <button 
+                                onClick={() => setCancelModal({ isOpen: false, id: null })}
+                                className="flex-1 py-4 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all"
+                            >
+                                No, Keep
+                            </button>
+                            <button 
+                                onClick={handleCancelAppointment}
+                                className="flex-1 py-4 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-lg"
+                            >
+                                Yes, Cancel
                             </button>
                         </div>
                     </div>

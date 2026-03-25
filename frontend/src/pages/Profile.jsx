@@ -377,23 +377,57 @@ export default function Profile() {
                                 </div>
 
                                 <div className="pt-8 border-t border-slate-100">
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Past Medical Visits</h4>
+                                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Medical Doctor Appointments</h4>
                                     <div className="space-y-4">
-                                        {[
-                                            { dr: 'Dr. Sarah Wilson', type: 'Holistic Consultation', date: 'JAN 15, 2026', status: 'Completed' },
-                                            { dr: 'Dr. James Miller', type: 'Nutritional Assessment', date: 'DEC 22, 2025', status: 'Completed' }
-                                        ].map((visit, i) => (
-                                            <div key={i} className="flex justify-between items-center p-5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-slate-200 transition-colors">
-                                                <div>
-                                                    <p className="font-bold text-slate-800 text-sm group-hover:text-emerald-600 transition-colors">{visit.dr}</p>
-                                                    <p className="text-xs text-slate-400 font-medium">{visit.type}</p>
+                                        {ud.appointments && ud.appointments.length > 0 ? (
+                                            ud.appointments.map((apt, i) => (
+                                                <div key={apt.id || i} className="p-6 bg-white rounded-3xl border border-slate-100 group hover:border-slate-200 transition-all shadow-sm">
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex gap-4">
+                                                            <div className="w-12 h-12 rounded-2xl bg-violet-50 flex items-center justify-center text-violet-500 border border-violet-100 shrink-0">
+                                                                <Heart className="w-6 h-6" />
+                                                            </div>
+                                                            <div>
+                                                                <p className="font-bold text-slate-900 group-hover:text-violet-600 transition-colors">{apt.doctor?.name || 'Doctor Consultation'}</p>
+                                                                <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">{apt.specialty}</p>
+                                                                <div className="flex items-center gap-2 mt-2 text-[10px] text-slate-400 font-bold">
+                                                                    <Calendar className="w-3 h-3" /> {new Date(apt.appointmentDate).toLocaleString()}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex flex-col items-end gap-2">
+                                                            <span className={`px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded-full ${apt.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-600' : apt.status === 'CANCELLED' ? 'bg-rose-50 text-rose-500' : 'bg-amber-50 text-amber-600'}`}>
+                                                                {apt.status}
+                                                            </span>
+                                                            <div className="flex gap-1">
+                                                                {apt.status === 'PENDING' && (
+                                                                    <button 
+                                                                        onClick={() => {
+                                                                            if (window.confirm("Cancel this appointment?")) ud.cancelAppointment(apt.id);
+                                                                        }}
+                                                                        className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                )}
+                                                                <button 
+                                                                    onClick={() => {
+                                                                        if (window.confirm("Remove from history?")) ud.deleteAppointmentRecord(apt.id);
+                                                                    }}
+                                                                    className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{visit.date}</p>
-                                                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-1">{visit.status}</p>
-                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="text-center py-12 bg-slate-50/50 rounded-3xl border border-dashed border-slate-200">
+                                                <p className="text-slate-400 font-medium italic">No doctor appointments booked</p>
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
                                 </div>
                             </div>

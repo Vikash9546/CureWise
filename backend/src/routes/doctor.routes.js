@@ -9,6 +9,7 @@ router.get("/", authenticate, getAllDoctors);
 router.post("/", authenticate, createAppointment);
 router.get("/my", authenticate, getMyAppointments);
 router.get("/:id", authenticate, getDoctorById);
+router.patch("/:id/cancel", authenticate, cancelAppointment);
 router.delete("/:id", authenticate, deleteAppointment);
 router.get("/all", authenticate, authorize(["ADMIN"]), getAllAppointments);
 

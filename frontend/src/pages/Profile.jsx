@@ -5,7 +5,7 @@ import {
     User, Mail, Shield, ShieldCheck, Flame, Zap, Award,
     MessageSquare, Heart, Bookmark, History, Target,
     ExternalLink, ChevronRight, Sparkles, Filter,
-    Calendar, Video, Leaf, Trash2, AtSign, Edit3, Check, X, Loader2, LogOut
+    Calendar, Video, Leaf, Trash2, AtSign, Edit3, Check, X, Loader2, LogOut, AlertTriangle, XCircle
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -21,6 +21,14 @@ export default function Profile() {
     const [editingUsername, setEditingUsername] = useState(false);
     const [usernameInput, setUsernameInput] = useState('');
     const [usernameLoading, setUsernameLoading] = useState(false);
+    
+    const [confirmModal, setConfirmModal] = useState({ 
+        isOpen: false, 
+        title: '', 
+        message: '', 
+        onConfirm: null,
+        type: 'danger' // danger, warning
+    });
 
     if (!user) {
         return (
@@ -322,9 +330,13 @@ export default function Profile() {
                                                     </div>
                                                     <button
                                                         onClick={() => {
-                                                            if (window.confirm('Delete this activity item?')) {
-                                                                ud.deleteComment(c.id);
-                                                            }
+                                                            setConfirmModal({
+                                                                isOpen: true,
+                                                                title: 'Delete Activity?',
+                                                                message: 'Are you sure you want to delete this activity item?',
+                                                                type: 'danger',
+                                                                onConfirm: () => ud.deleteComment(c.id)
+                                                            });
                                                         }}
                                                         className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                                                     >
@@ -401,18 +413,30 @@ export default function Profile() {
                                                             </span>
                                                             <div className="flex gap-1">
                                                                 {apt.status === 'PENDING' && (
-                                                                    <button 
+                                                                    <button
                                                                         onClick={() => {
-                                                                            if (window.confirm("Cancel this appointment?")) ud.cancelAppointment(apt.id);
+                                                                            setConfirmModal({
+                                                                                                isOpen: true,
+                                                                                                title: 'Cancel Appointment?',
+                                                                                                message: 'Are you sure you want to cancel this booking?',
+                                                                                                type: 'warning',
+                                                                                                onConfirm: () => ud.cancelAppointment(apt.id)
+                                                                                            });
                                                                         }}
                                                                         className="px-3 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase hover:bg-rose-500 hover:text-white transition-all shadow-sm"
                                                                     >
                                                                         Cancel
                                                                     </button>
                                                                 )}
-                                                                <button 
+                                                                <button
                                                                     onClick={() => {
-                                                                        if (window.confirm("Remove from history?")) ud.deleteAppointmentRecord(apt.id);
+                                                                        setConfirmModal({
+                                                                            isOpen: true,
+                                                                            title: 'Remove Record?',
+                                                                            message: 'This will permanently remove this appointment from your history.',
+                                                                            type: 'danger',
+                                                                            onConfirm: () => ud.deleteAppointmentRecord(apt.id)
+                                                                        });
                                                                     }}
                                                                     className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
                                                                 >
@@ -449,9 +473,13 @@ export default function Profile() {
                                                             onClick={(e) => {
                                                                 e.preventDefault();
                                                                 e.stopPropagation();
-                                                                if (window.confirm('Are you sure you want to delete this story?')) {
-                                                                    ud.deleteStory(story.id);
-                                                                }
+                                                                setConfirmModal({
+                                                                    isOpen: true,
+                                                                    title: 'Delete Story?',
+                                                                    message: 'Are you sure you want to delete this story?',
+                                                                    type: 'danger',
+                                                                    onConfirm: () => ud.deleteStory(story.id)
+                                                                });
                                                             }}
                                                             className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
                                                             title="Delete Story"
@@ -460,7 +488,7 @@ export default function Profile() {
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <p className="text-xs text-slate-500 font-medium mb-3 line-clamp-2">{story.headline || story.fullStory.slice(0, 100)}...</p>
+                                                <p className="text-xs text-slate-500 font-medium mb-3 line-clamp-2">{story.headline || (story.fullStory && story.fullStory.slice(0, 100)) || ''}...</p>
                                                 <div className="flex items-center gap-4">
                                                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{story.category}</span>
                                                     <span className="w-1 h-1 rounded-full bg-slate-200" />
@@ -490,9 +518,13 @@ export default function Profile() {
                                                 <h4 className="font-bold text-slate-900 uppercase text-sm tracking-wide">{post.title}</h4>
                                                 <button
                                                     onClick={() => {
-                                                        if (window.confirm('Are you sure you want to delete this discussion?')) {
-                                                            ud.deleteDiscussion(post.id);
-                                                        }
+                                                        setConfirmModal({
+                                                            isOpen: true,
+                                                            title: 'Delete Discussion?',
+                                                            message: 'Are you sure you want to delete this discussion?',
+                                                            type: 'danger',
+                                                            onConfirm: () => ud.deleteDiscussion(post.id)
+                                                        });
                                                     }}
                                                     className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                                                     title="Delete Discussion"
@@ -548,6 +580,37 @@ export default function Profile() {
                     </div>
                 </div>
             </div>
+
+            {/* Unified Custom Confirmation Modal */}
+            {confirmModal.isOpen && (
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
+                    <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 shadow-2xl relative animate-in fade-in zoom-in duration-300">
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 border mx-auto ${confirmModal.type === 'danger' ? 'bg-rose-50 border-rose-100 text-rose-500' : 'bg-amber-50 border-amber-100 text-amber-500'}`}>
+                            {confirmModal.type === 'danger' ? <AlertTriangle className="w-8 h-8" /> : <XCircle className="w-8 h-8" />}
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">{confirmModal.title}</h2>
+                        <p className="text-slate-500 text-center mb-8 text-sm">{confirmModal.message}</p>
+                        
+                        <div className="flex gap-4">
+                            <button 
+                                onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+                                className="flex-1 py-4 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50 transition-all"
+                            >
+                                No, Cancel
+                            </button>
+                            <button 
+                                onClick={async () => {
+                                    if (confirmModal.onConfirm) await confirmModal.onConfirm();
+                                    setConfirmModal({ ...confirmModal, isOpen: false });
+                                }}
+                                className={`flex-1 py-4 rounded-xl text-white font-bold transition-all shadow-lg ${confirmModal.type === 'danger' ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-200' : 'bg-slate-900 hover:bg-slate-800 shadow-slate-200'}`}
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

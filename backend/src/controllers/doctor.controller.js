@@ -3,11 +3,41 @@ import prisma from "../utils/prisma.js";
 const SPECIALTIES = ["General", "Ayurveda", "Homeopathy", "Naturopathy", "Cardiology", "Dermatology", "Neurology", "Orthopedics", "Pediatrics", "Psychiatry", "Gynecology", "ENT", "Ophthalmology"];
 
 export const getAllDoctors = async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 9;
+    const skip = (page - 1) * limit;
+    const { search, specialty } = req.query;
+
+    const where = {
+        AND: [
+            specialty && specialty !== 'All' ? { specialty } : {},
+            search ? {
+                OR: [
+                    { name: { contains: search, mode: 'insensitive' } },
+                    { hospitalName: { contains: search, mode: 'insensitive' } },
+                    { city: { contains: search, mode: 'insensitive' } }
+                ]
+            } : {}
+        ]
+    };
+
     try {
-        const doctors = await prisma.doctor.findMany({
-            orderBy: { name: "asc" },
+        const [doctors, total] = await Promise.all([
+            prisma.doctor.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: { name: "asc" },
+            }),
+            prisma.doctor.count({ where })
+        ]);
+
+        res.json({
+            doctors,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
         });
-        res.json(doctors);
     } catch (error) {
         console.error("Get doctors error:", error);
         res.status(500).json({ message: "Internal server error" });

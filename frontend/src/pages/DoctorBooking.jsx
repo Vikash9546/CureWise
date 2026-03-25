@@ -16,9 +16,10 @@ export default function DoctorBooking() {
     const [doctors, setDoctors] = useState([]);
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [doctorsLoading, setDoctorsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedSpecialty, setSelectedSpecialty] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     // Booking Flow States
     const [step, setStep] = useState(1); // 1: List, 2: Form, 3: Payment, 4: Success
@@ -32,9 +33,13 @@ export default function DoctorBooking() {
     });
 
     useEffect(() => {
-        if (!authLoading && !user) navigate('/login');
-        else if (user) {
+        if (user) {
             fetchDoctors();
+        }
+    }, [user, searchQuery, selectedSpecialty, currentPage]);
+
+    useEffect(() => {
+        if (user) {
             fetchAppointments();
             if (!window.Razorpay && !document.querySelector('script[src*="razorpay.com"]')) {
                 const script = document.createElement('script');
@@ -42,17 +47,22 @@ export default function DoctorBooking() {
                 script.async = true;
                 document.body.appendChild(script);
             }
-            if (location.state?.hospitalName) {
-                setSearchQuery(location.state.hospitalName);
-            }
         }
-    }, [user, authLoading]);
+    }, [user]);
 
     const fetchDoctors = async () => {
         setDoctorsLoading(true);
         try {
-            const { data } = await api.get('/doctors');
-            setDoctors(data);
+            const { data } = await api.get('/doctors', {
+                params: {
+                    page: currentPage,
+                    search: searchQuery,
+                    specialty: selectedSpecialty,
+                    limit: 9
+                }
+            });
+            setDoctors(data.doctors);
+            setTotalPages(data.totalPages);
         } catch (error) {
             toast.error('Failed to load doctors');
         } finally {
@@ -105,13 +115,18 @@ export default function DoctorBooking() {
         setBookingData({ patientName: '', patientAge: '', appointmentDate: '', notes: '' });
     };
 
-    const filteredDoctors = doctors.filter(doc => {
-        const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (doc.hospitalName && doc.hospitalName.toLowerCase().includes(searchQuery.toLowerCase()));
-        const matchesSpecialty = selectedSpecialty === 'All' || doc.specialty === selectedSpecialty;
+    // Server-side filtering, so we just use doctors from state
+    const filteredDoctors = doctors;
 
-        return matchesSearch && matchesSpecialty;
-    });
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handleSpecialtyChange = (e) => {
+        setSelectedSpecialty(e.target.value);
+        setCurrentPage(1);
+    };
 
     if (authLoading) {
         return (
@@ -156,7 +171,7 @@ export default function DoctorBooking() {
                                 placeholder="Search by doctor or hospital name..."
                                 className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-slate-800 focus:outline-none focus:border-violet-500/50 shadow-sm"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={handleSearchChange}
                             />
                         </div>
                         <div className="relative group">
@@ -164,7 +179,7 @@ export default function DoctorBooking() {
                             <select
                                 className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-slate-800 appearance-none focus:outline-none focus:border-violet-500/50 shadow-sm cursor-pointer"
                                 value={selectedSpecialty}
-                                onChange={(e) => setSelectedSpecialty(e.target.value)}
+                                onChange={handleSpecialtyChange}
                             >
                                 {SPECIALTIES.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
@@ -236,6 +251,48 @@ export default function DoctorBooking() {
                             </div>
                         )}
                     </div>
+
+                    {/* Pagination UI */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-2 mb-16">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage(prev => prev - 1)}
+                                className="w-10 h-10 rounded-xl flex items-center justify-center border border-slate-200 hover:bg-violet-50 hover:text-violet-600 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                            >
+                                <ChevronDown className="w-5 h-5 rotate-90" />
+                            </button>
+                            
+                            {[...Array(totalPages)].map((_, i) => {
+                                const page = i + 1;
+                                if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                                    return (
+                                        <button
+                                            key={page}
+                                            onClick={() => setCurrentPage(page)}
+                                            className={`w-10 h-10 rounded-xl font-bold transition-all ${currentPage === page 
+                                                ? 'bg-violet-600 text-white shadow-lg shadow-violet-200 scale-110' 
+                                                : 'text-slate-500 hover:bg-slate-50 border border-transparent hover:border-slate-200'}`}
+                                        >
+                                            {page}
+                                        </button>
+                                    );
+                                }
+                                if (page === currentPage - 2 || page === currentPage + 2) {
+                                    return <span key={page} className="text-slate-300">...</span>;
+                                }
+                                return null;
+                            })}
+
+                            <button
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage(prev => prev + 1)}
+                                className="w-10 h-10 rounded-xl flex items-center justify-center border border-slate-200 hover:bg-violet-50 hover:text-violet-600 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                            >
+                                <ChevronDown className="w-5 h-5 -rotate-90" />
+                            </button>
+                        </div>
+                    )}
                 </>
             )}
 

@@ -6,8 +6,8 @@
     "type": "module",
     "scripts": {
         "dev": "nodemon src/index.js",
-        "build": "npx prisma generate && tsc",
-        "start": "npx prisma generate && node src/index.js",
+        "build": "tsc",
+        "start": "node src/index.js",
         "migrate": "npx prisma migrate dev",
         "generate": "npx prisma generate",
         "test": "jest"

@@ -5,7 +5,7 @@ import { useUserData } from '../context/UserDataContext';
 import {
     Leaf, User, LogOut, Menu, ChevronDown, Bot, Activity,
     Database, BookOpen, Wind, Calculator, Zap, Flower2, X,
-    Award, Ambulance, Video
+    Award, Ambulance
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -33,8 +33,8 @@ export default function Navbar() {
                     items: [
                         { name: 'Health Chatbot', path: '/ai-chatbot', icon: Bot },
                         { name: 'Symptom Checker', path: '/symptom-checker', icon: Activity },
-                        { name: 'Emergency Ambulance', path: '/ambulance', icon: Ambulance },
-                        { name: 'Video Consultation', path: '/meetings', icon: Video }
+                        { name: 'Emergency Ambulance', path: '/ambulance', icon: Ambulance }
+                        // { name: 'Video Consultation', path: '/meetings', icon: Video }
                     ]
                 },
                 {

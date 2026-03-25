@@ -10,7 +10,7 @@ import Register from './pages/Register';
 import HomePage from './pages/HomePage';
 import DoctorBooking from './pages/DoctorBooking';
 import AmbulanceBooking from './pages/AmbulanceBooking';
-import MeetingBooking from './pages/MeetingBooking';
+// import MeetingBooking from './pages/MeetingBooking';
 import Profile from './pages/Profile';
 import AIChatbot from './pages/AIChatbot';
 import SymptomChecker from './pages/SymptomChecker';
@@ -82,7 +82,7 @@ function App() {
                                         <Route path="/" element={<HomePage />} />
                                         <Route path="/doctors" element={<DoctorBooking />} />
                                         <Route path="/ambulance" element={<AmbulanceBooking />} />
-                                        <Route path="/meetings" element={<MeetingBooking />} />
+                                        {/* <Route path="/meetings" element={<MeetingBooking />} /> */}
                                         <Route
                                             path="/profile"
                                             element={

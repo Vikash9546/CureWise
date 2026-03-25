@@ -28,7 +28,7 @@ model User {
   // Relations
   doctorAppointments  DoctorAppointment[]  @relation("PatientAppointments")
   ambulanceBookings   AmbulanceBooking[]   @relation("UserAmbulance")
-  meetings            Meeting[]            @relation("UserMeetings")
+  // meetings            Meeting[]            @relation("UserMeetings")
   posts               Post[]               @relation("UserPosts")
   comments            Comment[]            @relation("UserComments")
   likes               Like[]               @relation("UserLikes")
@@ -88,6 +88,7 @@ model AmbulanceBooking {
   createdAt     DateTime  @default(now())
 }
 
+/*
 model Meeting {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   user          User      @relation("UserMeetings", fields: [userId], references: [id])
@@ -102,6 +103,7 @@ model Meeting {
   status        String    @default("SCHEDULED") 
   createdAt     DateTime  @default(now())
 }
+*/
 
 model Post {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId

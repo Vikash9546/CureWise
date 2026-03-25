@@ -128,7 +128,7 @@ export default function Login() {
 
                 <div className="mt-10 pt-8 border-t border-slate-50 text-center">
                     <p className="text-slate-500 text-sm font-medium">
-                        New to Appointly?{' '}
+                        New to Curwise?{' '}
                         <Link to="/register" className="text-violet-600 hover:text-indigo-600 font-bold transition-colors">Create account</Link>
                     </p>
                 </div>

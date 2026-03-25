@@ -95,6 +95,51 @@ sequenceDiagram
 
 ---
 
+## 📂 Folder Structure & File Functionality
+
+### 💻 Frontend (`/frontend`)
+
+| Directory / File | Functionality |
+| :--- | :--- |
+| **`src/pages/`** | **Core Application Views** |
+| `HomePage.jsx` | Landing page with featured services and high-fidelity hero section. |
+| `Profile.jsx` | Dynamic user dashboard showing wellness progress, history, and live awards. |
+| `CommunityHub.jsx` | Interactive forum for health discussions, peer support, and verified sharing. |
+| `SuccessStories.jsx` | A curated gallery of shared healing journeys (The Healing Vault). |
+| `AmbulanceBooking.jsx`| Emergency transport request system with real-time tracking and dispatch. |
+| `DoctorBooking.jsx` | Multi-step booking flow for consultations with holistic medical experts. |
+| `WellnessPlans.jsx` | AI-driven health assessment engine and personalized plan visualizer. |
+| `RemedyDatabase.jsx` | Searchable library of natural cures, herbal remedies, and disease mapping. |
+| `YogaCentreFinder.jsx`| Geo-location based finder for nearby yoga, meditation, and wellness studios. |
+| `SymptomChecker.jsx` | Interactive diagnostic tool for preliminary health risk assessments. |
+| **`src/context/`** | **Global State & Logic** |
+| `AuthContext.jsx` | Manages secure sessions, JWT persistence, and Google OAuth integration. |
+| `UserDataContext.jsx` | Centralized engine for points, streaks, badges, and live history sync. |
+| **`src/api/`** | **Data Communication** |
+| `index.js` | Configured Axios instance with intercepted auth headers for secure API calls. |
+
+### ⚙️ Backend (`/backend`)
+
+| Directory / File | Functionality |
+| :--- | :--- |
+| **`src/controllers/`**| **Core Business Intelligence** |
+| `auth.controller.js` | Logic for secure registration, login, and tiered profile synchronization. |
+| `ambulance.controller.js`| Manages the full emergency request lifecycle (request, dispatch, deletion). |
+| `doctor.controller.js` | Orchestrates appointment scheduling, payment validation, and history management. |
+| `community.controller.js`| Handles forum interactions, nested comments, and "Healing Vault" permissions. |
+| `wellness.controller.js`| Processes complex health assessments to generate personalized recovery paths. |
+| **`src/routes/`** | **API Microservices** |
+| `auth.routes.js` | Endpoints for identity management and profile updates. |
+| `ambulance.routes.js` | Secured routes for high-priority emergency transport services. |
+| `community.routes.js` | Data flows for story sharing, discussions, and engagement tracking. |
+| **`src/middleware/`** | **Security Layer** |
+| `auth.middleware.js` | JWT validation engine with Role-Based Access Control (RBAC) enforcement. |
+| **`prisma/`** | **Database Architecture** |
+| `schema.prisma` | Unified data model defining users, bookings, stories, and gamification schema. |
+| `seed.js` | Automated script to populate the environment with initial holistic data. |
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites

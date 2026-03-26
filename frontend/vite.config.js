@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
     plugins: [react()],
     server: {
-        port: 5173
+        port: 5173,
+        headers: {
+            "Permissions-Policy": "federated-credential-management=(self \"https://accounts.google.com\")"
+        }
     }
 })

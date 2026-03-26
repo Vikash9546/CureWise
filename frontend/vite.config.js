@@ -7,7 +7,7 @@ export default defineConfig({
     server: {
         port: 5173,
         headers: {
-            "Permissions-Policy": "federated-credential-management=(self \"https://accounts.google.com\")"
+            "Permissions-Policy": "identity-credentials-get=(self \"https://accounts.google.com\")"
         }
     }
 })

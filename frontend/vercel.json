@@ -5,7 +5,7 @@
             "headers": [
                 {
                     "key": "Permissions-Policy",
-                    "value": "federated-credential-management=(self \"https://accounts.google.com\")"
+                    "value": "identity-credentials-get=(self \"https://accounts.google.com\")"
                 }
             ]
         }

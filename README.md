@@ -2,7 +2,7 @@
 
 CureWise is a comprehensive health and wellness ecosystem designed to bridge the gap between traditional medicine and holistic healing. It empowers users with AI-driven personalized wellness plans, a vibrant community support system, and direct access to medical experts.
 
-## 🌟 Key Features
+## Key Features
 
 - **Healing Vault (Success Stories)**: A protected sanctuary where community members share their intimate transformation journeys. Access is restricted to authenticated users to maintain privacy and trust.
 - **Community Hub**: An interactive platform for health discussions, peer support, and verified resource sharing.
@@ -16,7 +16,7 @@ CureWise is a comprehensive health and wellness ecosystem designed to bridge the
 
 ---
 
-## 🏗️ System Design
+## System Design
 
 ### Architecture Overview
 
@@ -85,7 +85,7 @@ sequenceDiagram
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Frontend**: React 18, Tailwind CSS, Lucide Icons, Axios, React Router.
 - **Backend**: Node.js, Express.js (ESM), Prisma ORM.
@@ -95,9 +95,9 @@ sequenceDiagram
 
 ---
 
-## 📂 Folder Structure & File Functionality
+## Folder Structure & File Functionality
 
-### 💻 Frontend (`/frontend`)
+### Frontend (`/frontend`)
 
 | Directory / File | Functionality |
 | :--- | :--- |
@@ -118,7 +118,7 @@ sequenceDiagram
 | **`src/api/`** | **Data Communication** |
 | `index.js` | Configured Axios instance with intercepted auth headers for secure API calls. |
 
-### ⚙️ Backend (`/backend`)
+### Backend (`/backend`)
 
 | Directory / File | Functionality |
 | :--- | :--- |
@@ -140,7 +140,7 @@ sequenceDiagram
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js (v18 or higher)

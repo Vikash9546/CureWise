@@ -26,7 +26,7 @@ class ErrorBoundary extends React.Component {
                         </div>
                         <h1 className="text-3xl font-bold text-white mb-4">Something went wrong</h1>
                         <p className="text-slate-400 mb-8 leading-relaxed">
-                            Appointly encountered an unexpected error. We've been notified and are looking into it.
+                            Curwise encountered an unexpected error. We've been notified and are looking into it.
                         </p>
 
                         <div className="bg-slate-900/50 rounded-xl p-4 mb-8 text-left border border-white/5 overflow-hidden">

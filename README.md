@@ -7,11 +7,10 @@ CureWise is a comprehensive health and wellness ecosystem designed to bridge the
 - **Healing Vault (Success Stories)**: A protected sanctuary where community members share their intimate transformation journeys. Access is restricted to authenticated users to maintain privacy and trust.
 - **Community Hub**: An interactive platform for health discussions, peer support, and verified resource sharing.
 - **AI-Powered Wellness Plans**: Personalized health assessments that generate dynamic wellness plans based on holistic and natural principles.
-- **Doctor Consultation**: Seamless booking system for specialized consultations, including support for video meetings.
+- **Doctor Consultation**: Seamless booking system for specialized consultations.
 - **Emergency Care**: High-priority ambulance booking system with real-time status tracking for critical situations.
 - **Remedy Database**: A vast, searchable library of natural remedies and disease mapping to empower self-care.
 - **Holistic Health Tools**: Integrated BMI calculator, water intake tracker, and evidence-based health risk assessment quizzes.
-- **Zen Space**: Dedicated yoga and meditation modules, including a "Zen Space Finder" to locate nearby studios.
 - **Gamified Reputation**: A motivation engine that rewards users with points, daily streaks, and tiered badges for maintaining healthy habits.
 
 ---

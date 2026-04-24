@@ -391,10 +391,38 @@ export function UserDataProvider({ children }) {
             isPostSaved,
             isCommentLiked,
             // Keep some mock selectors for compatibility if needed
-            isChallengeJoined: (id) => profile.challengesJoined.includes(id),
-            getChallengeProgress: (id) => profile.challengeProgress[id] || 0,
-            joinChallenge: (id) => persist(prev => ({ ...prev, challengesJoined: [...prev.challengesJoined, id] })),
-            logChallengeDay: (id) => persist(prev => ({ ...prev, challengeProgress: { ...prev.challengeProgress, [id]: (prev.challengeProgress[id] || 0) + 1 } })),
+            isChallengeJoined: (id) => profile.challengesJoined?.includes(String(id)),
+            getChallengeProgress: (id) => profile.challengeProgress?.[String(id)] || 0,
+            joinChallenge: async (id) => {
+                try {
+                    const { data } = await api.post(`/community/challenges/${id}/join`);
+                    setProfileState(prev => ({
+                        ...prev,
+                        points: data.user?.points ?? prev.points,
+                        badges: data.user?.badges ?? prev.badges,
+                        challengesJoined: data.user?.challengesJoined ?? [...prev.challengesJoined, String(id)]
+                    }));
+                    toast.success("Challenge joined! +5 Points");
+                } catch (error) {
+                    console.error("Join challenge error:", error);
+                    toast.error("Failed to join challenge");
+                }
+            },
+            logChallengeDay: async (id) => {
+                try {
+                    const { data } = await api.post(`/community/challenges/${id}/log`);
+                    setProfileState(prev => ({
+                        ...prev,
+                        points: data.user?.points ?? prev.points,
+                        badges: data.user?.badges ?? prev.badges,
+                        challengeProgress: data.user?.challengeProgress ?? { ...prev.challengeProgress, [id]: (prev.challengeProgress[id] || 0) + 1 }
+                    }));
+                    toast.success("Progress logged! +10 Points");
+                } catch (error) {
+                    console.error("Log day error:", error);
+                    toast.error("Failed to log progress");
+                }
+            },
             registerEvent: (event) => persist(prev => ({ ...prev, registeredEvents: [...prev.registeredEvents, event] })),
             appointments,
             fetchAppointments,

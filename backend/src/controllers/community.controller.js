@@ -215,6 +215,7 @@ export const toggleLikePost = async (req, res) => {
         });
     }
 };
+
 export const toggleSavePost = async (req, res) => {
     try {
         const { postId } = req.params;
@@ -224,12 +225,116 @@ export const toggleSavePost = async (req, res) => {
             return res.status(400).json({ message: "Missing postId or userId" });
         }
 
-        // Implementation of save feature depends on your User model
-        // If savedPostIds was removed, you might want to return a message
-        // For now, let's just return success to avoid a 500 error
-        res.json({ message: "Save status updated (Simulation)", saved: true });
+        const user = await store.user.findById(userId);
+        const isSaved = user.savedPostIds.includes(postId);
+        
+        const update = isSaved 
+            ? { $pull: { savedPostIds: postId } } 
+            : { $addToSet: { savedPostIds: postId } };
+            
+        await store.user.findByIdAndUpdate(userId, update);
+        
+        // Award points for saving
+        await addPoints(userId, isSaved ? "UNSAVE_POST" : "SAVE_POST", postId);
+
+        const updatedUser = await store.user.findById(userId);
+        res.json({ 
+            message: "Save status updated", 
+            saved: !isSaved,
+            user: { points: updatedUser.points, badges: updatedUser.badges }
+        });
     } catch (error) {
-        console.error("EXPLICIT ERROR in toggleSavePost:", error);
-        res.status(500).json({ message: "Internal server error", error: error.message });
+        console.error("Save toggle error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const joinChallenge = async (req, res) => {
+    try {
+        const { id } = req.params; // Challenge ID
+        const userId = req.user?.id;
+
+        if (!id || !userId) return res.status(400).json({ message: "Missing data" });
+
+        // Update user: add to joined challenges
+        await store.user.findByIdAndUpdate(userId, {
+            $addToSet: { challengesJoined: id }
+        });
+
+        // Award points (+5)
+        // Use a deterministic ID for the pointLog reference
+        const refId = new mongoose.Types.ObjectId(id.padStart(24, '0').slice(-24));
+        await addPoints(userId, "JOIN_CHALLENGE", refId);
+
+        const updatedUser = await store.user.findById(userId);
+        res.json({
+            message: "Joined challenge",
+            user: { 
+                points: updatedUser.points, 
+                badges: updatedUser.badges,
+                challengesJoined: updatedUser.challengesJoined 
+            }
+        });
+    } catch (error) {
+        console.error("Join challenge error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const logChallengeDay = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.id;
+
+        if (!id || !userId) return res.status(400).json({ message: "Missing data" });
+
+        // Increment progress in the Map
+        const user = await store.user.findById(userId);
+        const currentProgress = user.challengeProgress.get(id) || 0;
+        user.challengeProgress.set(id, currentProgress + 1);
+        await user.save();
+
+        // Award points (+10)
+        const refId = new mongoose.Types.ObjectId(id.padStart(24, '0').slice(-24));
+        await addPoints(userId, "LOG_CHALLENGE_DAY", refId);
+
+        const updatedUser = await store.user.findById(userId);
+        res.json({
+            message: "Day logged",
+            user: { 
+                points: updatedUser.points, 
+                badges: updatedUser.badges,
+                challengeProgress: updatedUser.challengeProgress 
+            }
+        });
+    } catch (error) {
+        console.error("Log day error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const awardPoints = async (req, res) => {
+    try {
+        const { actionType, referenceId } = req.body;
+        const userId = req.user?.id;
+
+        if (!actionType || !referenceId || !userId) {
+            return res.status(400).json({ message: "Missing actionType or referenceId" });
+        }
+
+        await addPoints(userId, actionType, referenceId);
+        
+        const updatedUser = await store.user.findById(userId);
+        res.json({
+            message: "Points awarded",
+            user: { 
+                points: updatedUser.points, 
+                badges: updatedUser.badges,
+                streak: updatedUser.streak
+            }
+        });
+    } catch (error) {
+        console.error("Award points error:", error);
+        res.status(500).json({ message: "Internal server error" });
     }
 };

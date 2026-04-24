@@ -64,12 +64,23 @@ export default function Navbar() {
         <>
             <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 py-3 md:py-4 border-b border-slate-100 shadow-sm">
                 <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
-                    <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center group shrink-0">
-                        <img
-                            src="/logo.png"
-                            alt="CureWise Logo"
-                            className="h-12 md:h-16 w-auto object-contain group-hover:scale-105 transition-transform"
-                        />
+                    <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center group shrink-0 relative">
+                        {/* CSS Brush Stroke Background */}
+                        <div className="absolute inset-0 bg-[#f2e6d9] blur-xl opacity-30 -rotate-6 scale-150 rounded-[20%] group-hover:opacity-50 transition-opacity" />
+                        
+                        <div className="flex items-center gap-3 relative z-10">
+                            {/* SVG Silhouette */}
+                            <svg viewBox="0 0 100 100" className="w-10 h-10 md:w-12 md:h-12 text-[#8c6b4f] fill-current">
+                                <path d="M45,10 C35,10 30,20 30,25 C30,30 35,32 40,32 C45,32 50,28 50,20 C50,15 45,10 45,10 Z M30,35 C20,35 15,45 15,50 C15,55 20,60 30,60 L70,90 L65,95 L25,65 C15,65 10,60 10,50 C10,40 15,35 30,35 Z" className="opacity-80" />
+                                <circle cx="45" cy="21" r="4" fill="white" />
+                                <path d="M30,35 L40,60 L35,80 L40,95 L45,80 L50,60 L45,35 Z" fill="currentColor" />
+                            </svg>
+                            
+                            <div className="flex flex-col">
+                                <span className="text-2xl md:text-3xl font-['Great_Vibes'] text-[#8c6b4f] leading-none">CureWise</span>
+                                <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em] text-[#b39c89] mt-1">Wellness & Balance</span>
+                            </div>
+                        </div>
                     </Link>
 
                     <div className="hidden lg:flex items-center gap-10">

@@ -248,17 +248,44 @@ function StressQuiz() {
 function SleepTest() {
     const [analyzing, setAnalyzing] = useState(false);
     const [result, setResult] = useState(null);
+    const [sleepTime, setSleepTime] = useState('22:00');
+    const [wakeTime, setWakeTime] = useState('06:00');
 
-    const startAnalysis = () => {
+    const calculateScore = () => {
         setAnalyzing(true);
+        
+        // Calculate hours
+        const [sH, sM] = sleepTime.split(':').map(Number);
+        const [wH, wM] = wakeTime.split(':').map(Number);
+        
+        let start = sH + sM/60;
+        let end = wH + wM/60;
+        
+        if (end < start) end += 24; // Handle overnight
+        const duration = end - start;
+
+        // Biological Scoring Logic
+        let score = 0;
+        let quality = '';
+        let tip = '';
+
+        if (duration >= 7 && duration <= 9) {
+            score = Math.round(90 + (Math.random() * 10));
+            quality = 'Restorative';
+            tip = 'Excellent! Your sleep window is perfectly aligned with biological recovery.';
+        } else if (duration < 7) {
+            score = Math.round((duration / 7) * 85);
+            quality = 'Insufficient';
+            tip = 'You are in a slight sleep debt. Try to aim for at least 7.5 hours tonight.';
+        } else {
+            score = 80;
+            quality = 'Overslept';
+            tip = 'Too much sleep can cause lethargy. Aim for a consistent 8-hour window.';
+        }
+
         setTimeout(() => {
             setAnalyzing(false);
-            setResult({
-                score: 82,
-                quality: 'Restorative',
-                tip: 'Your rhythm is consistent. Try reducing blue light 1 hour earlier for 90+ score.'
-            });
-            // Award points for completion
+            setResult({ score, quality, tip, duration: duration.toFixed(1) });
             api.post('/community/points', { actionType: 'DAILY_LOG', referenceId: '60d5ecb00000000000000002' }).catch(() => {});
         }, 3000);
     };
@@ -273,11 +300,11 @@ function SleepTest() {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-3xl font-black text-indigo-600">{result.score}</span>
-                        <span className="text-[8px] font-black uppercase text-slate-400">Sleep Score</span>
+                        <span className="text-[8px] font-black uppercase text-slate-400">Restoration</span>
                     </div>
                 </div>
                 <div>
-                    <h2 className="text-3xl font-playfair font-bold text-slate-900 mb-2">{result.quality} Sleep</h2>
+                    <h2 className="text-3xl font-playfair font-bold text-slate-900 mb-2">{result.quality} ({result.duration}h)</h2>
                     <p className="text-slate-500 max-w-sm mx-auto font-medium">{result.tip}</p>
                 </div>
                 <button onClick={() => setResult(null)} className="flex items-center gap-2 mx-auto text-xs font-black uppercase tracking-widest text-indigo-500 hover:text-indigo-600 transition-colors">
@@ -288,14 +315,14 @@ function SleepTest() {
     }
 
     return (
-        <div className="w-full text-center space-y-12 h-full flex flex-col justify-center">
+        <div className="w-full text-center space-y-10 h-full flex flex-col justify-center">
             <div className={`bg-indigo-50 w-24 h-24 rounded-[2rem] flex items-center justify-center text-indigo-500 mx-auto ${analyzing ? 'animate-pulse' : ''}`}>
                 <Moon className="w-12 h-12" />
             </div>
             
             {analyzing ? (
                 <div className="space-y-6">
-                    <h3 className="text-2xl font-playfair font-bold text-slate-900 mb-2">Analyzing your sleep cycles...</h3>
+                    <h3 className="text-2xl font-playfair font-bold text-slate-900 mb-2">Calculating restoration...</h3>
                     <div className="flex justify-center gap-3">
                         <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
                         <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -304,21 +331,24 @@ function SleepTest() {
                 </div>
             ) : (
                 <div className="space-y-8">
-                    <div>
-                        <h3 className="text-3xl font-playfair font-bold text-slate-900 mb-4">Deep Sleep Analysis</h3>
-                        <p className="text-slate-500 text-sm font-medium max-w-sm mx-auto leading-relaxed">
-                            Our AI will evaluate your reported rhythms and provide a biological restoration score.
-                        </p>
+                    <div className="grid grid-cols-2 gap-6 max-w-xs mx-auto">
+                        <div className="text-left space-y-2">
+                            <label className="text-[10px] font-black uppercase text-slate-400">Bedtime</label>
+                            <input type="time" value={sleepTime} onChange={e => setSleepTime(e.target.value)} className="w-full p-3 rounded-xl border border-slate-100 font-bold text-indigo-600" />
+                        </div>
+                        <div className="text-left space-y-2">
+                            <label className="text-[10px] font-black uppercase text-slate-400">Wake Up</label>
+                            <input type="time" value={wakeTime} onChange={e => setWakeTime(e.target.value)} className="w-full p-3 rounded-xl border border-slate-100 font-bold text-indigo-600" />
+                        </div>
                     </div>
-                    <button onClick={startAnalysis} className="bg-indigo-600 text-white font-bold px-12 py-5 rounded-full shadow-2xl shadow-indigo-600/20 active:scale-95 transition-all text-xs uppercase tracking-widest">
-                        Begin Analysis
+                    <button onClick={calculateScore} className="bg-indigo-600 text-white font-bold px-12 py-5 rounded-full shadow-2xl shadow-indigo-600/20 active:scale-95 transition-all text-xs uppercase tracking-widest">
+                        Analyze Rhythm
                     </button>
                 </div>
             )}
         </div>
     );
 }
-
 import { useUserData } from '../context/UserDataContext';
 import { Link } from 'react-router-dom';
 import api from '../api';

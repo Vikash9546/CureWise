@@ -523,9 +523,29 @@ export default function CommunityHub() {
     // ── Post Actions ──
     const handleLike = async (id) => {
         if (!user) { showToast('Please log in to like posts.', 'info'); return; }
-        await ud.toggleLikePost(id);
-        fetchPosts();
-        showToast(ud.isPostLiked(id) ? 'Unliked.' : '+2 pts for liking! 💚');
+        
+        // Optimistic UI Update
+        setPosts(prev => prev.map(p => {
+            if (p.id === id) {
+                const isLiked = ud.isPostLiked(id);
+                return {
+                    ...p,
+                    isLiked: !isLiked,
+                    likes: isLiked ? (p.likes - 1) : (p.likes + 1)
+                };
+            }
+            return p;
+        }));
+
+        try {
+            await ud.toggleLikePost(id);
+            // Refresh to get authoritative state from server
+            fetchPosts();
+            showToast(ud.isPostLiked(id) ? 'Unliked.' : '+2 pts for liking! 💚');
+        } catch (error) {
+            // Revert on failure
+            fetchPosts();
+        }
     };
 
     const handleToggleComments = (id) => {
@@ -534,9 +554,25 @@ export default function CommunityHub() {
 
     const handleAddComment = async (postId, text) => {
         if (!user) { showToast('Please log in to comment.', 'info'); return; }
-        await ud.addComment(postId, text, false);
-        fetchPosts();
-        showToast('Comment posted! +5 pts 🌱');
+        
+        // Optimistic UI Update (temporary)
+        setPosts(prev => prev.map(p => {
+            if (p.id === postId) {
+                return {
+                    ...p,
+                    _count: { ...p._count, comments: (p._count?.comments || 0) + 1 }
+                };
+            }
+            return p;
+        }));
+
+        try {
+            await ud.addComment(postId, text, false);
+            fetchPosts();
+            showToast('Comment posted! +5 pts 🌱');
+        } catch (error) {
+            fetchPosts();
+        }
     };
 
     const handleLikeComment = (postId, commentId) => {

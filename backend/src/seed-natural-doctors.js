@@ -234,9 +234,20 @@ async function main() {
     ];
 
     for (const doc of naturalDoctors) {
+        const docWithLocation = {
+            ...doc,
+            location: {
+                type: "Point",
+                coordinates: [doc.lon, doc.lat] // MongoDB expects [lng, lat]
+            }
+        };
+        // Remove flat lat/lon to avoid cluttering DB
+        delete docWithLocation.lat;
+        delete docWithLocation.lon;
+
         await prisma.doctor.findOneAndUpdate(
             { name: doc.name },
-            doc,
+            docWithLocation,
             { upsert: true, new: true }
         );
     }

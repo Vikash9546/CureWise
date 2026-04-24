@@ -31,8 +31,13 @@ export const getAllDoctors = async (req, res) => {
             store.doctor.countDocuments(query)
         ]);
 
+        const doctorsWithId = doctors.map(doc => ({
+            ...doc.toObject(),
+            id: doc._id
+        }));
+
         res.json({
-            doctors,
+            doctors: doctorsWithId,
             total,
             page,
             totalPages: Math.ceil(total / limit)
@@ -48,7 +53,11 @@ export const getDoctorById = async (req, res) => {
     try {
         const doctor = await store.doctor.findById(id);
         if (!doctor) return res.status(404).json({ message: "Doctor not found" });
-        res.json(doctor);
+        
+        res.json({
+            ...doctor.toObject(),
+            id: doctor._id
+        });
     } catch (error) {
         console.error("Get doctor error:", error);
         res.status(500).json({ message: "Internal server error" });

@@ -4,22 +4,30 @@ import { addPoints } from "../services/points.service.js";
 
 export const getPosts = async (req, res) => {
     try {
+        const userId = req.user?.id;
         const posts = await store.post.find()
             .populate('authorId', 'username firstName lastName email')
             .sort({ createdAt: -1 })
             .lean();
         
-        // Add counts from Post model if available, or calculate
-        const postsWithCounts = posts.map(post => ({
+        let userLikedIds = [];
+        if (userId) {
+            const user = await store.user.findById(userId).select('likedPostIds');
+            userLikedIds = user?.likedPostIds?.map(id => id.toString()) || [];
+        }
+
+        // Add counts and isLiked status
+        const postsWithStatus = posts.map(post => ({
             ...post,
             id: post._id,
+            isLiked: userLikedIds.includes(post._id.toString()),
             _count: { 
                 comments: post.commentsCount || 0, 
                 likes: post.likesCount || 0 
             }
         }));
 
-        res.json(postsWithCounts);
+        res.json(postsWithStatus);
     } catch (error) {
         console.error("Get posts error:", error);
         res.status(500).json({ message: "Internal server error" });

@@ -51,14 +51,56 @@ export const addPoints = async (userId, actionType, referenceId) => {
       referenceId: rId
     });
 
-    // 2. Increment the user's points
-    await store.user.updateOne(
-      { _id: uId },
-      { $inc: { points } }
-    );
-    
-    console.log(`Added ${points} points to user ${userId} for ${actionType}`);
-  } catch (error) {
+    // 4. Update user points and check for badges
+  const user = await store.user.findById(uId);
+  if (!user) return;
+
+  const oldPoints = user.points;
+  const newPoints = oldPoints + points;
+  const earnedBadges = [...user.badges];
+
+  // --- Auto Badge Logic ---
+  const checkBadge = (id, condition) => {
+    if (condition && !earnedBadges.includes(id)) {
+      earnedBadges.push(id);
+      console.log(`Badge Awarded: ${id}`);
+    }
+  };
+
+  // Points-based badges
+  checkBadge('explorer', newPoints >= 200);
+  checkBadge('mentor', newPoints >= 800);
+  checkBadge('healer', newPoints >= 2000);
+
+  // Engagement-based badges
+  if (actionType === "LIKE_POST") {
+    checkBadge('heartgiver', user.likedPostIds.length >= 10);
+  }
+  
+  if (actionType === "COMMENT") {
+    // We can estimate comment count or add a field. 
+    // For now, let's use points as a proxy or just check if it's their 5th comment point log
+    const commentCount = await store.pointLog.countDocuments({ userId: uId, actionType: "COMMENT" });
+    checkBadge('helper', commentCount >= 5);
+  }
+
+  if (actionType === "DAILY_STREAK") {
+    checkBadge('streak7', user.streak >= 7);
+    checkBadge('streak30', user.streak >= 30);
+  }
+
+  if (actionType === "JOIN_CHALLENGE") {
+    checkBadge('challenger', true);
+  }
+
+  // Update User
+  await store.user.findByIdAndUpdate(uId, {
+    $inc: { points: points },
+    $set: { badges: earnedBadges }
+  });
+
+  console.log(`Points updated for user ${uId}: ${oldPoints} -> ${newPoints}`);
+} catch (error) {
     if (error.code === 11000) {
       console.log(`User ${userId} already received points for ${actionType} on ${referenceId}`);
       return;

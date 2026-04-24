@@ -37,38 +37,38 @@ const SORT_OPTIONS = [
 ];
 
 const CHALLENGES = [
-    { id: 1, title: '7-Day Meditation', emoji: '🧘', progress: 4, total: 7, streak: 4 },
-    { id: 2, title: '14-Day Detox', emoji: '🍃', progress: 9, total: 14, streak: 9 },
-    { id: 3, title: 'Water Streak', emoji: '💧', progress: 11, total: 30, streak: 11 },
+    { id: '60d5ecb5c5e6a20015f0e901', title: '7-Day Meditation', emoji: '🧘', progress: 4, total: 7, streak: 4 },
+    { id: '60d5ecb5c5e6a20015f0e902', title: '14-Day Detox', emoji: '🍃', progress: 9, total: 14, streak: 9 },
+    { id: '60d5ecb5c5e6a20015f0e903', title: 'Water Streak', emoji: '💧', progress: 11, total: 30, streak: 11 },
 ];
 
 const INITIAL_POSTS = [
     {
-        id: 1, author: 'PureLiving', category: 'herbal', isExpert: true, isAnonymous: false,
+        id: '60d5ecb5c5e6a20015f0e001', author: 'PureLiving', category: 'herbal', isExpert: true, isAnonymous: false,
         title: 'The power of Ashwagandha for chronic stress',
         content: "I've been using Ashwagandha for 30 days and the results are incredible. My cortisol levels feel balanced and my sleep has improved significantly. Anyone else tried this adaptogen? I combined it with 4-7-8 breathing and the results compounded beautifully.",
         tags: ['#stress', '#herbs', '#adaptogens'], likes: 42, isLiked: false, savedBy: [], time: '2h ago',
         comments: [
             {
-                id: 101, author: 'NatureSoul', text: 'I had the same experience! KSM-66 extract is the most bioavailable form.', likes: 8, isLiked: false, time: '1h ago', isExpert: false,
-                replies: [{ id: 1011, author: 'HerbGuru', text: 'Agreed — pair it with black pepper for better absorption.', likes: 3, isLiked: false, time: '45m ago', isExpert: true }]
+                id: '60d5ecb5c5e6a20015f0e101', author: 'NatureSoul', text: 'I had the same experience! KSM-66 extract is the most bioavailable form.', likes: 8, isLiked: false, time: '1h ago', isExpert: false,
+                replies: [{ id: '60d5ecb5c5e6a20015f0e102', author: 'HerbGuru', text: 'Agreed — pair it with black pepper for better absorption.', likes: 3, isLiked: false, time: '45m ago', isExpert: true }]
             },
-            { id: 102, author: 'Anonymous', text: 'How long before you saw results? I\'m on day 10 and feel nothing yet.', likes: 2, isLiked: false, time: '30m ago', isExpert: false, replies: [] },
+            { id: '60d5ecb5c5e6a20015f0e103', author: 'Anonymous', text: 'How long before you saw results? I\'m on day 10 and feel nothing yet.', likes: 2, isLiked: false, time: '30m ago', isExpert: false, replies: [] },
         ],
         isReported: false, showComments: false, points: 42,
     },
     {
-        id: 2, author: 'Anonymous', category: 'mental', isExpert: false, isAnonymous: true,
+        id: '60d5ecb5c5e6a20015f0e002', author: 'Anonymous', category: 'mental', isExpert: false, isAnonymous: true,
         title: 'Dealing with anxiety naturally — what worked for me',
         content: "I wanted to share my journey with anxiety. Breathwork (specifically 4-7-8 method) and specific herbal teas like chamomile truly changed my life. Peace is possible without medication. Please share what worked for you too — we heal together.",
         tags: ['#anxiety', '#mentalhealth', '#breathwork'], likes: 38, isLiked: false, savedBy: [], time: '5h ago',
         comments: [
-            { id: 201, author: 'MindfulMeera', text: 'Lavender oil diffusing while doing box breathing is incredible too!', likes: 5, isLiked: false, time: '4h ago', isExpert: false, replies: [] },
+            { id: '60d5ecb5c5e6a20015f0e201', author: 'MindfulMeera', text: 'Lavender oil diffusing while doing box breathing is incredible too!', likes: 5, isLiked: false, time: '4h ago', isExpert: false, replies: [] },
         ],
         isReported: false, showComments: false, points: 38,
     },
     {
-        id: 3, author: 'HerbGuru', category: 'diet', isExpert: true, isAnonymous: false,
+        id: '60d5ecb5c5e6a20015f0e003', author: 'HerbGuru', category: 'diet', isExpert: true, isAnonymous: false,
         title: 'My 21-day anti-inflammatory diet experiment — full results',
         content: "After 3 weeks on a strict anti-inflammatory diet (no sugar, no refined carbs, no seed oils), my joint pain reduced by 70%, my skin cleared, and my energy is through the roof. Here's my full protocol including meal plans and supplement stack.",
         tags: ['#diet', '#inflammation', '#healing'], likes: 67, isLiked: false, savedBy: [], time: '1d ago',
@@ -76,12 +76,12 @@ const INITIAL_POSTS = [
         isReported: false, showComments: false, points: 67,
     },
     {
-        id: 4, author: 'WellnessMom', category: 'womens', isExpert: false, isAnonymous: false,
+        id: '60d5ecb5c5e6a20015f0e004', author: 'WellnessMom', category: 'womens', isExpert: false, isAnonymous: false,
         title: 'PCOS journey: natural healing after 2 years of struggle',
         content: "Two years of irregular periods, weight gain, and frustration. Then I discovered the spearmint tea + inositol + low GI diet protocol. Within 3 months my cycles normalized. I want to share everything I learned for anyone struggling with PCOS.",
         tags: ['#pcos', '#hormones', '#womenshealth'], likes: 94, isLiked: false, savedBy: [], time: '2d ago',
         comments: [
-            { id: 401, author: 'Anonymous', text: 'Thank you so much for sharing this. I needed to hear this today 💙', likes: 12, isLiked: false, time: '1d ago', isExpert: false, replies: [] },
+            { id: '60d5ecb5c5e6a20015f0e401', author: 'Anonymous', text: 'Thank you so much for sharing this. I needed to hear this today 💙', likes: 12, isLiked: false, time: '1d ago', isExpert: false, replies: [] },
         ],
         isReported: false, showComments: false, points: 94,
     },

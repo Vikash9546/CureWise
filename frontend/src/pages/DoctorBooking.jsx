@@ -13,7 +13,7 @@ export default function DoctorBooking() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const { appointments, fetchAppointments, cancelAppointment, deleteAppointmentRecord } = useUserData();
+    const { appointments, fetchAppointments, cancelAppointment, deleteAppointmentRecord, bookAppointment } = useUserData();
     const [doctors, setDoctors] = useState([]);
     const [loading, setLoading] = useState(false);
     const [doctorsLoading, setDoctorsLoading] = useState(true);
@@ -92,10 +92,9 @@ export default function DoctorBooking() {
                 paymentAmount: selectedDoctor.consultancyFee,
                 simulated: true
             };
-            await api.post('/doctors', payload);
+            await bookAppointment(payload);
             toast.success('Payment Received! Appointment Confirmed.');
             setStep(4);
-            fetchAppointments();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Booking failed');
         } finally {

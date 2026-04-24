@@ -1,32 +1,36 @@
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import store from "./models/index.js";
+import connectDB from "./config/db.js";
+import dotenv from "dotenv";
 
-const prisma = new PrismaClient();
+dotenv.config();
+
+const prisma = store; // Keep alias for easier migration within the file
 
 async function main() {
+    await connectDB();
     const password = await bcrypt.hash("password123", 10);
 
     // Create Admin
-    const admin = await prisma.user.upsert({
-        where: { email: "admin@example.com" },
-        update: {},
-        create: {
+    const admin = await prisma.user.findOneAndUpdate(
+        { email: "admin@example.com" },
+        {
             email: "admin@example.com",
             password,
             role: "ADMIN",
         },
-    });
+        { upsert: true, new: true }
+    );
 
     // Create Customer
-    await prisma.user.upsert({
-        where: { email: "customer@example.com" },
-        update: {},
-        create: {
+    await prisma.user.findOneAndUpdate(
+        { email: "customer@example.com" },
+        {
             email: "customer@example.com",
             password,
             role: "CUSTOMER",
         },
-    });
+        { upsert: true, new: true }
+    );
 
     console.log("Seed data created: Admin (admin@example.com), Customer (customer@example.com)");
     console.log("Password for both: password123");
@@ -80,18 +84,11 @@ async function main() {
     ];
 
     for (const doc of doctors) {
-        await prisma.doctor.upsert({
-            where: { id: "000000000000000000000000" },
-            update: doc,
-            create: doc
-        }).catch(async () => {
-            const existing = await prisma.doctor.findFirst({ where: { name: doc.name } });
-            if (!existing) {
-                await prisma.doctor.create({ data: doc });
-            } else {
-                await prisma.doctor.update({ where: { id: existing.id }, data: doc });
-            }
-        });
+        await prisma.doctor.findOneAndUpdate(
+            { name: doc.name },
+            doc,
+            { upsert: true, new: true }
+        );
     }
     console.log("Main doctors with city data seeded.");
 }
@@ -102,5 +99,5 @@ main()
         process.exit(1);
     })
     .finally(async () => {
-        await prisma.$disconnect();
+        // await mongoose.disconnect();
     });

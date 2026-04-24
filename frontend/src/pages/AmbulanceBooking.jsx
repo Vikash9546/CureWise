@@ -11,7 +11,7 @@ const EMERGENCIES = ["Accident", "Heart Attack", "Stroke", "Pregnancy", "Critica
 export default function AmbulanceBooking() {
     const { user, loading: authLoading } = useAuth();
     const navigate = useNavigate();
-    const { ambulanceRequests, fetchAmbulanceRequests, cancelAmbulanceRequest, deleteAmbulanceRequest } = useUserData();
+    const { ambulanceRequests, fetchAmbulanceRequests, cancelAmbulanceRequest, deleteAmbulanceRequest, requestAmbulance } = useUserData();
     const [loading, setLoading] = useState(false);
     const [confirmCancelId, setConfirmCancelId] = useState(null);
 
@@ -32,9 +32,8 @@ export default function AmbulanceBooking() {
         e.preventDefault();
         setLoading(true);
         try {
-            await api.post('/ambulance', formData);
+            await requestAmbulance(formData);
             setFormData({ patientName: '', location: '', contactNumber: '', emergencyType: 'Accident', notes: '' });
-            fetchAmbulanceRequests();
             toast.success('Ambulance request dispatched!');
         } catch (error) {
             toast.error(error.response?.data?.message || 'Request failed');

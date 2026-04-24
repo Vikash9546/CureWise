@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import store from "../models/index.js";
 
-const prisma = new PrismaClient();
+const prisma = store;
 
 export default prisma;

@@ -146,6 +146,40 @@ export function UserDataProvider({ children }) {
         }
     }, [fetchAmbulanceRequests]);
 
+    const bookAppointment = useCallback(async (payload) => {
+        try {
+            const { data } = await api.post('/doctors', payload);
+            setProfileState(prev => ({
+                ...prev,
+                points: data.user?.points ?? prev.points,
+                streak: data.user?.streak ?? prev.streak,
+                badges: data.user?.badges ?? prev.badges
+            }));
+            fetchAppointments();
+            return data;
+        } catch (error) {
+            console.error("Book appointment failed:", error);
+            throw error;
+        }
+    }, [fetchAppointments]);
+
+    const requestAmbulance = useCallback(async (payload) => {
+        try {
+            const { data } = await api.post('/ambulance', payload);
+            setProfileState(prev => ({
+                ...prev,
+                points: data.user?.points ?? prev.points,
+                streak: data.user?.streak ?? prev.streak,
+                badges: data.user?.badges ?? prev.badges
+            }));
+            fetchAmbulanceRequests();
+            return data;
+        } catch (error) {
+            console.error("Ambulance request failed:", error);
+            throw error;
+        }
+    }, [fetchAmbulanceRequests]);
+
 
     // Persist to backend and update local state
     const persist = useCallback(async (updater) => {
@@ -213,22 +247,30 @@ export function UserDataProvider({ children }) {
     const toggleLikePost = useCallback(async (postId) => {
         const id = String(postId);
         try {
-            await api.post(`/community/${id}/like`);
-            persist(prev => {
-                const isLiked = prev.likedPosts.includes(id);
-                const likedPosts = isLiked ? prev.likedPosts.filter(x => x !== id) : [...prev.likedPosts, id];
-                const pts = prev.points + (isLiked ? POINTS.UNLIKE_POST : POINTS.LIKE_POST);
-                let badges = [...prev.badges];
-                if (!isLiked && likedPosts.length >= 10 && !badges.includes('heartgiver')) {
-                    badges.push('heartgiver');
-                    awardBadge('heartgiver');
-                }
-                return { ...prev, likedPosts, points: pts, badges };
+            const { data } = await api.post(`/community/${id}/like`);
+            setProfileState(prev => {
+                const isLiked = data.liked;
+                const likedPosts = isLiked ? [...prev.likedPosts, id] : prev.likedPosts.filter(x => x !== id);
+                
+                // Use backend returned user data if available
+                const newState = {
+                    ...prev,
+                    likedPosts,
+                    points: data.user?.points ?? prev.points,
+                    streak: data.user?.streak ?? prev.streak,
+                    badges: data.user?.badges ?? prev.badges
+                };
+                return newState;
             });
+
+            if (data.liked) {
+                toast.success("Liked!");
+            }
         } catch (error) {
             console.error("Like toggle failed:", error);
+            toast.error("Failed to update like");
         }
-    }, [persist, awardBadge]);
+    }, []);
 
     const toggleSavePost = useCallback(async (postId) => {
         const id = String(postId);
@@ -250,20 +292,20 @@ export function UserDataProvider({ children }) {
 
     const addComment = useCallback(async (postId, text, isStory = false) => {
         try {
-            await api.post(`/community/${postId}/comments`, { text, isStory });
-            persist(prev => {
-                const pts = prev.points + POINTS.POST_COMMENT;
-                let badges = [...prev.badges];
-                if (prev.myComments.length >= 4 && !badges.includes('helper')) {
-                    badges.push('helper');
-                    awardBadge('helper');
-                }
-                return { ...prev, points: pts, badges, myComments: [...prev.myComments, { id: Date.now() }] };
-            });
+            const { data } = await api.post(`/community/${postId}/comments`, { text, isStory });
+            setProfileState(prev => ({
+                ...prev,
+                points: data.user?.points ?? prev.points,
+                streak: data.user?.streak ?? prev.streak,
+                badges: data.user?.badges ?? prev.badges,
+                myComments: [...prev.myComments, data.comment]
+            }));
+            toast.success("Comment added!");
         } catch (error) {
             console.error("Add comment failed:", error);
+            toast.error("Failed to add comment");
         }
-    }, [persist, awardBadge]);
+    }, []);
 
     const addDiscussion = useCallback(async (post) => {
         try {
@@ -303,12 +345,21 @@ export function UserDataProvider({ children }) {
 
     const saveWellnessPlan = useCallback(async (assessment, plan) => {
         try {
-            await api.post('/wellness', { assessment, plan });
-            persist(prev => ({ ...prev, assessment, activePlan: plan }));
+            const { data } = await api.post('/wellness', { assessment, plan });
+            setProfileState(prev => ({
+                ...prev,
+                assessment,
+                activePlan: plan,
+                points: data.user?.points ?? prev.points,
+                streak: data.user?.streak ?? prev.streak,
+                badges: data.user?.badges ?? prev.badges
+            }));
+            toast.success("Wellness plan saved!");
         } catch (error) {
             console.error("Save wellness plan failed:", error);
+            toast.error("Failed to save plan");
         }
-    }, [persist]);
+    }, []);
 
     // Derived: current badge
     const currentBadge = BADGE_DEFS
@@ -348,7 +399,9 @@ export function UserDataProvider({ children }) {
             ambulanceRequests,
             fetchAmbulanceRequests,
             cancelAmbulanceRequest,
-            deleteAmbulanceRequest
+            deleteAmbulanceRequest,
+            bookAppointment,
+            requestAmbulance
 
         }}>
             {children}

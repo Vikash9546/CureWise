@@ -1,4 +1,4 @@
-import prisma from "../utils/prisma.js";
+import store from "../models/index.js";
 
 export const requestAmbulance = async (req, res) => {
     const userId = req.user.id;
@@ -9,18 +9,27 @@ export const requestAmbulance = async (req, res) => {
     }
 
     try {
-        const booking = await prisma.ambulanceBooking.create({
-            data: {
-                userId,
-                patientName,
-                location,
-                contactNumber,
-                emergencyType,
-                notes: notes || null,
-                status: "REQUESTED",
-            },
+        const booking = await store.ambulance.create({
+            userId,
+            patientName,
+            location,
+            contactNumber,
+            emergencyType,
+            status: "REQUESTED",
         });
-        res.status(201).json(booking);
+
+        // Add points for requesting an ambulance (if desired, let's add a small amount or just sync user)
+        // For now, let's just fetch user to sync points if any are added
+        const updatedUser = await store.user.findById(userId);
+
+        res.status(201).json({
+            booking,
+            user: {
+                points: updatedUser.points,
+                streak: updatedUser.streak,
+                badges: updatedUser.badges
+            }
+        });
     } catch (error) {
         console.error("Ambulance request error:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -30,10 +39,7 @@ export const requestAmbulance = async (req, res) => {
 export const getMyRequests = async (req, res) => {
     const userId = req.user.id;
     try {
-        const bookings = await prisma.ambulanceBooking.findMany({
-            where: { userId },
-            orderBy: { createdAt: "desc" },
-        });
+        const bookings = await store.ambulance.find({ userId }).sort({ createdAt: -1 });
         res.json(bookings);
     } catch (error) {
         console.error("Get ambulance requests error:", error);
@@ -45,15 +51,16 @@ export const updateStatus = async (req, res) => {
     if (req.user.role !== "ADMIN") return res.status(403).json({ message: "Admin only" });
     const { id } = req.params;
     const { status } = req.body;
-    const validStatuses = ["REQUESTED", "DISPATCHED", "ARRIVED", "COMPLETED"];
+    const validStatuses = ["REQUESTED", "DISPATCHED", "COMPLETED"];
     if (!validStatuses.includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
     }
     try {
-        const updated = await prisma.ambulanceBooking.update({
-            where: { id },
-            data: { status },
-        });
+        const updated = await store.ambulance.findByIdAndUpdate(
+            id,
+            { status },
+            { new: true }
+        );
         res.json(updated);
     } catch (error) {
         console.error("Update ambulance status error:", error);
@@ -63,9 +70,7 @@ export const updateStatus = async (req, res) => {
 
 export const getAllRequests = async (req, res) => {
     try {
-        const bookings = await prisma.ambulanceBooking.findMany({
-            orderBy: { createdAt: "desc" },
-        });
+        const bookings = await store.ambulance.find().sort({ createdAt: -1 });
         res.json(bookings);
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
@@ -77,18 +82,19 @@ export const cancelRequest = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const booking = await prisma.ambulanceBooking.findUnique({ where: { id } });
+        const booking = await store.ambulance.findById(id);
         if (!booking) return res.status(404).json({ message: "Request not found" });
 
         // Only original user or admin can cancel
-        if (booking.userId !== userId && req.user.role !== "ADMIN") {
+        if (booking.userId.toString() !== userId && req.user.role !== "ADMIN") {
             return res.status(403).json({ message: "Unauthorized" });
         }
 
-        const updated = await prisma.ambulanceBooking.update({
-            where: { id },
-            data: { status: "CANCELLED" },
-        });
+        const updated = await store.ambulance.findByIdAndUpdate(
+            id,
+            { status: "CANCELLED" },
+            { new: true }
+        );
 
         res.json(updated);
     } catch (error) {
@@ -102,15 +108,15 @@ export const deleteRequest = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const booking = await prisma.ambulanceBooking.findUnique({ where: { id } });
+        const booking = await store.ambulance.findById(id);
         if (!booking) return res.status(404).json({ message: "Request not found" });
 
         // Only original user or admin can delete
-        if (booking.userId !== userId && req.user.role !== "ADMIN") {
+        if (booking.userId.toString() !== userId && req.user.role !== "ADMIN") {
             return res.status(403).json({ message: "Unauthorized" });
         }
 
-        await prisma.ambulanceBooking.delete({ where: { id } });
+        await store.ambulance.findByIdAndDelete(id);
 
         res.json({ message: "Ambulance request deleted successfully" });
     } catch (error) {

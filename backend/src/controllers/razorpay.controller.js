@@ -1,6 +1,6 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
-import prisma from "../utils/prisma.js";
+import store from "../models/index.js";
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_placeholder_id",
@@ -54,14 +54,16 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     if (isAuthentic) {
         try {
-            // Update appointment status to CONFIRMED and payment to COMPLETED
-            await prisma.doctorAppointment.update({
-                where: { id: appointmentId },
-                data: {
+            // Update appointment status to CONFIRMED and payment to SUCCESS
+            await store.appointment.findByIdAndUpdate(
+                appointmentId,
+                {
                     status: "CONFIRMED",
-                    paymentStatus: "COMPLETED",
-                },
-            });
+                    "payment.status": "SUCCESS",
+                    "payment.transactionId": razorpay_payment_id,
+                    "payment.provider": "RAZORPAY"
+                }
+            );
 
             res.status(200).json({ message: "Payment verified successfully" });
         } catch (error) {

@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import prisma from "../utils/prisma.js";
+import store from "../models/index.js";
+import mongoose from "mongoose";
+import { addPoints } from "../services/points.service.js";
 import { OAuth2Client } from "google-auth-library";
 
 // Use placeholder for now. The user will replace this in .env
@@ -12,29 +14,27 @@ export const register = async (req, res) => {
     const { email, password, role, firstName, lastName, username } = req.body;
 
     try {
-        const existingUser = await prisma.user.findUnique({ where: { email } });
+        const existingUser = await store.user.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "User already exists" });
         }
 
         // Check if username is already taken
         if (username) {
-            const existingUsername = await prisma.user.findUnique({ where: { username } });
+            const existingUsername = await store.user.findOne({ username });
             if (existingUsername) {
                 return res.status(400).json({ message: "Username is already taken" });
             }
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await prisma.user.create({
-            data: {
-                email,
-                firstName,
-                lastName,
-                username: username || null,
-                password: hashedPassword,
-                role: role || "CUSTOMER",
-            },
+        const user = await store.user.create({
+            email,
+            firstName,
+            lastName,
+            username: username || null,
+            password: hashedPassword,
+            role: role || "CUSTOMER",
         });
 
         res.status(201).json({ message: "User created successfully", userId: user.id });
@@ -47,7 +47,7 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await store.user.findOne({ email });
         if (!user || !user.password) {
             return res.status(401).json({ message: "Invalid credentials or account uses Google Sign-In" });
         }
@@ -55,6 +55,36 @@ export const login = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        // Streak Logic
+        const now = new Date();
+        const lastDate = user.lastStreakDate ? new Date(user.lastStreakDate) : null;
+        let newStreak = user.streak || 0;
+        let shouldReward = false;
+
+        if (!lastDate) {
+            newStreak = 1;
+            shouldReward = true;
+        } else {
+            const diffTime = Math.abs(now - lastDate);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                newStreak += 1;
+                shouldReward = true;
+            } else if (diffDays > 1) {
+                newStreak = 1;
+                shouldReward = true;
+            }
+            // If diffDays === 0 (same day), do nothing
+        }
+
+        if (shouldReward) {
+            user.streak = newStreak;
+            user.lastStreakDate = now;
+            await user.save();
+            await addPoints(user._id, "STREAK_BONUS", user._id);
         }
 
         const token = jwt.sign(
@@ -76,24 +106,19 @@ export const login = async (req, res) => {
                 streak: user.streak,
                 badges: user.badges,
                 lastStreakDate: user.lastStreakDate,
-                likedPostIds: user.likedPostIds,
-                savedPostIds: user.savedPostIds,
-                registeredEvents: user.registeredEvents,
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
-                activeWellnessPlan: await prisma.wellnessPlan.findFirst({
-                    where: { userId: user.id, isActive: true },
-                    orderBy: { createdAt: 'desc' }
-                })
+                activeWellnessPlan: await store.wellness.findOne({ userId: user.id, isActive: true }).sort({ createdAt: -1 })
             },
         });
     } catch (error) {
+        console.error("Login error:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
 
 export const getMe = async (req, res) => {
     try {
-        const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+        const user = await store.user.findById(req.user.id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -108,14 +133,8 @@ export const getMe = async (req, res) => {
             streak: user.streak,
             badges: user.badges,
             lastStreakDate: user.lastStreakDate,
-            likedPostIds: user.likedPostIds,
-            savedPostIds: user.savedPostIds,
-            registeredEvents: user.registeredEvents,
             name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
-            activeWellnessPlan: await prisma.wellnessPlan.findFirst({
-                where: { userId: user.id, isActive: true },
-                orderBy: { createdAt: 'desc' }
-            })
+            activeWellnessPlan: await store.wellness.findOne({ userId: user.id, isActive: true }).sort({ createdAt: -1 })
         });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
@@ -128,15 +147,15 @@ export const updateProfile = async (req, res) => {
     try {
         // Check if username is already taken by another user
         if (username) {
-            const existingUsername = await prisma.user.findUnique({ where: { username } });
-            if (existingUsername && existingUsername.id !== req.user.id) {
+            const existingUsername = await store.user.findOne({ username });
+            if (existingUsername && existingUsername._id.toString() !== req.user.id) {
                 return res.status(400).json({ message: "Username is already taken" });
             }
         }
 
-        const updatedUser = await prisma.user.update({
-            where: { id: req.user.id },
-            data: {
+        const updatedUser = await store.user.findByIdAndUpdate(
+            req.user.id,
+            {
                 ...(username !== undefined && { username: username || null }),
                 ...(firstName !== undefined && { firstName }),
                 ...(lastName !== undefined && { lastName }),
@@ -144,11 +163,9 @@ export const updateProfile = async (req, res) => {
                 ...(streak !== undefined && { streak: parseInt(streak) }),
                 ...(badges !== undefined && { badges }),
                 ...(lastStreakDate !== undefined && { lastStreakDate: lastStreakDate ? new Date(lastStreakDate) : null }),
-                ...(likedPostIds !== undefined && { likedPostIds }),
-                ...(savedPostIds !== undefined && { savedPostIds }),
-                ...(registeredEvents !== undefined && { registeredEvents }),
             },
-        });
+            { new: true }
+        );
 
         res.json({
             id: updatedUser.id,
@@ -161,14 +178,8 @@ export const updateProfile = async (req, res) => {
             streak: updatedUser.streak,
             badges: updatedUser.badges,
             lastStreakDate: updatedUser.lastStreakDate,
-            likedPostIds: updatedUser.likedPostIds,
-            savedPostIds: updatedUser.savedPostIds,
-            registeredEvents: updatedUser.registeredEvents,
             name: updatedUser.username || (updatedUser.firstName && updatedUser.lastName ? `${updatedUser.firstName} ${updatedUser.lastName}` : updatedUser.email),
-            activeWellnessPlan: await prisma.wellnessPlan.findFirst({
-                where: { userId: updatedUser.id, isActive: true },
-                orderBy: { createdAt: 'desc' }
-            })
+            activeWellnessPlan: await store.wellness.findOne({ userId: updatedUser.id, isActive: true }).sort({ createdAt: -1 })
         });
     } catch (error) {
         console.error("Update profile error:", error);
@@ -191,17 +202,15 @@ export const googleLogin = async (req, res) => {
         }
 
         const email = payload.email;
-        let user = await prisma.user.findUnique({ where: { email } });
+        let user = await store.user.findOne({ email });
 
         if (!user) {
             // Create user without password since they use Google
-            user = await prisma.user.create({
-                data: {
-                    email,
-                    firstName: payload.given_name,
-                    lastName: payload.family_name,
-                    role: "CUSTOMER",
-                },
+            user = await store.user.create({
+                email,
+                firstName: payload.given_name,
+                lastName: payload.family_name,
+                role: "CUSTOMER",
             });
         }
 
@@ -224,14 +233,8 @@ export const googleLogin = async (req, res) => {
                 streak: user.streak,
                 badges: user.badges,
                 lastStreakDate: user.lastStreakDate,
-                likedPostIds: user.likedPostIds,
-                savedPostIds: user.savedPostIds,
-                registeredEvents: user.registeredEvents,
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
-                activeWellnessPlan: await prisma.wellnessPlan.findFirst({
-                    where: { userId: user.id, isActive: true },
-                    orderBy: { createdAt: 'desc' }
-                })
+                activeWellnessPlan: await store.wellness.findOne({ userId: user.id, isActive: true }).sort({ createdAt: -1 })
             },
         });
     } catch (error) {

@@ -7,8 +7,10 @@ import ambulanceRoutes from "./routes/ambulance.routes.js";
 // import meetingRoutes from "./routes/meeting.routes.js";
 import communityRoutes from "./routes/community.routes.js";
 import wellnessRoutes from "./routes/wellness.routes.js";
+import connectDB from "./config/db.js";
 
 dotenv.config({ override: true });
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 3000;

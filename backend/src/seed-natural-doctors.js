@@ -1,8 +1,13 @@
-import { PrismaClient } from "@prisma/client";
+import store from "./models/index.js";
+import connectDB from "./config/db.js";
+import dotenv from "dotenv";
 
-const prisma = new PrismaClient();
+dotenv.config();
+
+const prisma = store;
 
 async function main() {
+    await connectDB();
     console.log("Seeding 20 Natural Medicine Doctors with City data...");
 
     const naturalDoctors = [
@@ -229,18 +234,11 @@ async function main() {
     ];
 
     for (const doc of naturalDoctors) {
-        await prisma.doctor.upsert({
-            where: { id: "000000000000000000000000" },
-            update: doc,
-            create: doc
-        }).catch(async () => {
-            const existing = await prisma.doctor.findFirst({ where: { name: doc.name } });
-            if (!existing) {
-                await prisma.doctor.create({ data: doc });
-            } else {
-                await prisma.doctor.update({ where: { id: existing.id }, data: doc });
-            }
-        });
+        await prisma.doctor.findOneAndUpdate(
+            { name: doc.name },
+            doc,
+            { upsert: true, new: true }
+        );
     }
 
     console.log("Successfully seeded 20 Natural Medicine experts with City info.");
@@ -252,5 +250,5 @@ main()
         process.exit(1);
     })
     .finally(async () => {
-        await prisma.$disconnect();
+        // await mongoose.disconnect();
     });

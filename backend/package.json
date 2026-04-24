@@ -8,12 +8,11 @@
         "dev": "nodemon src/index.js",
         "build": "tsc",
         "start": "node src/index.js",
-        "migrate": "npx prisma migrate dev",
-        "generate": "npx prisma generate",
+        "seed": "node src/seed.js",
+        "seed:doctors": "node src/seed-natural-doctors.js",
         "test": "jest"
     },
     "dependencies": {
-        "@prisma/client": "^5.0.0",
         "axios": "^1.13.5",
         "bcryptjs": "^2.4.3",
         "cors": "^2.8.5",
@@ -21,7 +20,7 @@
         "express": "^4.18.2",
         "google-auth-library": "^10.5.0",
         "jsonwebtoken": "^9.0.1",
-        "prisma": "^5.0.0",
+        "mongoose": "^9.5.0",
         "razorpay": "^2.9.6"
     },
     "devDependencies": {

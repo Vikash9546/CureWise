@@ -401,8 +401,23 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto px-4">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
                         <div className="md:col-span-1">
-                            <Link to="/" className="flex items-center gap-3 mb-8 group">
-                                <img src="/logo.png" alt="CureWise Logo" className="h-12 w-auto object-contain" />
+                            <Link to="/" className="flex items-center gap-3 mb-8 group shrink-0 relative w-fit">
+                                {/* CSS Brush Stroke Background */}
+                                <div className="absolute inset-0 bg-[#f2e6d9] blur-xl opacity-30 -rotate-6 scale-150 rounded-[20%] group-hover:opacity-50 transition-opacity" />
+                                
+                                <div className="flex items-center gap-2 relative z-10">
+                                    {/* SVG Silhouette */}
+                                    <svg viewBox="0 0 100 100" className="w-8 h-8 text-[#8c6b4f] fill-current">
+                                        <path d="M45,10 C35,10 30,20 30,25 C30,30 35,32 40,32 C45,32 50,28 50,20 C50,15 45,10 45,10 Z M30,35 C20,35 15,45 15,50 C15,55 20,60 30,60 L70,90 L65,95 L25,65 C15,65 10,60 10,50 C10,40 15,35 30,35 Z" className="opacity-80" />
+                                        <circle cx="45" cy="21" r="4" fill="white" />
+                                        <path d="M30,35 L40,60 L35,80 L40,95 L45,80 L50,60 L45,35 Z" fill="currentColor" />
+                                    </svg>
+                                    
+                                    <div className="flex flex-col">
+                                        <span className="text-xl font-['Great_Vibes'] text-[#8c6b4f] leading-none">CureWise</span>
+                                        <span className="text-[7px] font-black uppercase tracking-[0.2em] text-[#b39c89] mt-0.5">Wellness & Balance</span>
+                                    </div>
+                                </div>
                             </Link>
                             <p className="text-slate-400 text-sm leading-relaxed font-medium mb-8">
                                 Redefining medical care through the lens of holistic balance and natural harmony. Your health is our sanctuary.

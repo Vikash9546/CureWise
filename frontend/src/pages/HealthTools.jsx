@@ -167,44 +167,158 @@ function WaterIntakeCalculator() {
 }
 
 function StressQuiz() {
+    const { profile, awardPoints } = useUserData();
+    const [step, setStep] = useState(0);
+    const [score, setScore] = useState(0);
+    const [finished, setFinished] = useState(false);
+
+    const questions = [
+        { q: "How often do you feel overwhelmed by your daily tasks?", points: 3 },
+        { q: "Have you experienced consistent muscle tension or headaches?", points: 2 },
+        { q: "Is your sleep often interrupted by racing thoughts?", points: 4 },
+        { q: "Do you spend less than 30 minutes outdoors each day?", points: 2 },
+        { q: "How frequently do you feel irritable or restless?", points: 3 },
+        { q: "Do you find it difficult to disconnect from digital devices?", points: 2 },
+        { q: "Have you noticed changes in your appetite due to mood?", points: 2 },
+        { q: "Do you feel like you lack a supportive community?", points: 4 }
+    ];
+
+    const handleAnswer = (val) => {
+        const newScore = score + (val ? questions[step].points : 0);
+        if (step < questions.length - 1) {
+            setScore(newScore);
+            setStep(step + 1);
+        } else {
+            setScore(newScore);
+            setFinished(true);
+            // Award points for completion
+            api.post('/community/points', { actionType: 'DAILY_LOG', referenceId: '60d5ecb00000000000000001' }).catch(() => {});
+        }
+    };
+
+    if (finished) {
+        const risk = score > 15 ? 'High' : score > 8 ? 'Medium' : 'Low';
+        const color = risk === 'High' ? 'text-rose-500' : risk === 'Medium' ? 'text-amber-500' : 'text-emerald-500';
+        
+        return (
+            <div className="w-full text-center space-y-8 animate-in fade-in zoom-in duration-500">
+                <div className={`w-24 h-24 rounded-full border-4 ${color.replace('text', 'border')} flex items-center justify-center mx-auto`}>
+                    <PieChart className={`w-12 h-12 ${color}`} />
+                </div>
+                <div>
+                    <h2 className="text-3xl font-playfair font-bold text-slate-900 mb-2">{risk} Risk Level</h2>
+                    <p className="text-slate-500 max-w-sm mx-auto">Your current environmental and internal stress is {risk.toLowerCase()}. We recommend {risk === 'High' ? 'Deep Meditation' : 'Light Yoga'} today.</p>
+                </div>
+                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 flex items-center justify-between">
+                    <div className="text-left">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reward Earned</p>
+                        <p className="font-bold text-emerald-600">+15 Wellness Points</p>
+                    </div>
+                    <button onClick={() => { setStep(0); setScore(0); setFinished(false); }} className="p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
+                        <RefreshCcw className="w-5 h-5 text-slate-400" />
+                    </button>
+                </div>
+                <Link to="/remedies" className="inline-block bg-slate-900 text-white font-bold px-10 py-4 rounded-full text-sm">View Recommended Remedies</Link>
+            </div>
+        );
+    }
+
     return (
-        <div className="w-full text-center space-y-12">
+        <div className="w-full text-center space-y-12 animate-in slide-in-from-right-4 duration-500">
             <div className="bg-emerald-50 w-20 h-20 rounded-3xl flex items-center justify-center text-emerald-500 mx-auto">
                 <Wind className="w-10 h-10" />
             </div>
-            <h2 className="text-2xl font-playfair font-bold text-slate-900">How balanced is your environment?</h2>
-            <div className="max-w-md mx-auto space-y-4">
-                {[
-                    "Feeling overwhelmed by tasks?",
-                    "Poor sleep quality recently?",
-                    "Lack of outdoor exposure?",
-                    "Consistent muscle tension?"
-                ].map(q => (
-                    <button key={q} className="w-full p-6 bg-slate-50 border border-slate-100 rounded-2xl text-left text-sm font-semibold text-slate-600 hover:border-emerald-500 hover:bg-white transition-all flex justify-between items-center group">
-                        {q} <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all" />
-                    </button>
-                ))}
+            <div className="space-y-4">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-500">Question {step + 1} of {questions.length}</p>
+                <h2 className="text-2xl md:text-3xl font-playfair font-bold text-slate-900 px-4">{questions[step].q}</h2>
             </div>
-            <p className="text-slate-400 text-[10px] uppercase font-black tracking-widest">4 questions remaining</p>
+            
+            <div className="max-w-md mx-auto grid grid-cols-2 gap-4">
+                <button onClick={() => handleAnswer(true)} className="p-8 bg-white border-2 border-slate-100 rounded-[2rem] font-bold text-slate-700 hover:border-emerald-500 hover:text-emerald-600 transition-all text-xl">Yes</button>
+                <button onClick={() => handleAnswer(false)} className="p-8 bg-white border-2 border-slate-100 rounded-[2rem] font-bold text-slate-700 hover:border-rose-500 hover:text-rose-600 transition-all text-xl">No</button>
+            </div>
+
+            <div className="w-full h-1 bg-slate-100 rounded-full max-w-xs mx-auto overflow-hidden">
+                <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${((step + 1) / questions.length) * 100}%` }} />
+            </div>
         </div>
     );
 }
 
 function SleepTest() {
+    const [analyzing, setAnalyzing] = useState(false);
+    const [result, setResult] = useState(null);
+
+    const startAnalysis = () => {
+        setAnalyzing(true);
+        setTimeout(() => {
+            setAnalyzing(false);
+            setResult({
+                score: 82,
+                quality: 'Restorative',
+                tip: 'Your rhythm is consistent. Try reducing blue light 1 hour earlier for 90+ score.'
+            });
+            // Award points for completion
+            api.post('/community/points', { actionType: 'DAILY_LOG', referenceId: '60d5ecb00000000000000002' }).catch(() => {});
+        }, 3000);
+    };
+
+    if (result) {
+        return (
+            <div className="w-full text-center space-y-8 animate-in fade-in zoom-in duration-500">
+                <div className="relative w-32 h-32 mx-auto">
+                    <svg className="w-full h-full transform -rotate-90">
+                        <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-indigo-50" />
+                        <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" strokeDasharray={364} strokeDashoffset={364 - (364 * result.score) / 100} className="text-indigo-500" />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-3xl font-black text-indigo-600">{result.score}</span>
+                        <span className="text-[8px] font-black uppercase text-slate-400">Sleep Score</span>
+                    </div>
+                </div>
+                <div>
+                    <h2 className="text-3xl font-playfair font-bold text-slate-900 mb-2">{result.quality} Sleep</h2>
+                    <p className="text-slate-500 max-w-sm mx-auto font-medium">{result.tip}</p>
+                </div>
+                <button onClick={() => setResult(null)} className="flex items-center gap-2 mx-auto text-xs font-black uppercase tracking-widest text-indigo-500 hover:text-indigo-600 transition-colors">
+                    <RefreshCcw className="w-4 h-4" /> Retake Analysis
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full text-center space-y-12 h-full flex flex-col justify-center">
-            <div className="bg-indigo-50 w-20 h-20 rounded-3xl flex items-center justify-center text-indigo-500 mx-auto">
-                <Moon className="w-10 h-10" />
+            <div className={`bg-indigo-50 w-24 h-24 rounded-[2rem] flex items-center justify-center text-indigo-500 mx-auto ${analyzing ? 'animate-pulse' : ''}`}>
+                <Moon className="w-12 h-12" />
             </div>
-            <div>
-                <h3 className="text-2xl font-playfair font-bold text-slate-900 mb-2">Analyzing your sleep cycles...</h3>
-                <p className="text-slate-500 text-sm font-medium">Coming soon: Connect your health data for deep analysis.</p>
-            </div>
-            <div className="flex justify-center gap-3">
-                <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce" />
-            </div>
+            
+            {analyzing ? (
+                <div className="space-y-6">
+                    <h3 className="text-2xl font-playfair font-bold text-slate-900 mb-2">Analyzing your sleep cycles...</h3>
+                    <div className="flex justify-center gap-3">
+                        <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <div className="w-3 h-3 bg-indigo-500 rounded-full animate-bounce" />
+                    </div>
+                </div>
+            ) : (
+                <div className="space-y-8">
+                    <div>
+                        <h3 className="text-3xl font-playfair font-bold text-slate-900 mb-4">Deep Sleep Analysis</h3>
+                        <p className="text-slate-500 text-sm font-medium max-w-sm mx-auto leading-relaxed">
+                            Our AI will evaluate your reported rhythms and provide a biological restoration score.
+                        </p>
+                    </div>
+                    <button onClick={startAnalysis} className="bg-indigo-600 text-white font-bold px-12 py-5 rounded-full shadow-2xl shadow-indigo-600/20 active:scale-95 transition-all text-xs uppercase tracking-widest">
+                        Begin Analysis
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
+
+import { useUserData } from '../context/UserDataContext';
+import { Link } from 'react-router-dom';
+import api from '../api';

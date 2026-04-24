@@ -249,7 +249,7 @@ function PostCard({ post, onLike, onToggleComments, onAddComment, onLikeComment,
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="flex gap-1 flex-wrap justify-end">
-                            {post.tags.slice(0, 2).map(tag => <TagChip key={tag} tag={tag} />)}
+                            {(post.tags || []).slice(0, 2).map(tag => <TagChip key={tag} tag={tag} />)}
                         </div>
                         <div className="relative">
                             <button onClick={() => setShowMenu(v => !v)}

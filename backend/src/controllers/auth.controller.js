@@ -106,6 +106,11 @@ export const login = async (req, res) => {
                 streak: user.streak,
                 badges: user.badges,
                 lastStreakDate: user.lastStreakDate,
+                challengesJoined: user.challengesJoined || [],
+                challengesCompleted: user.challengesCompleted || [],
+                challengeProgress: user.challengeProgress || {},
+                likedPostIds: user.likedPostIds || [],
+                savedPostIds: user.savedPostIds || [],
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
                 activeWellnessPlan: await store.wellness.findOne({ userId: user.id, isActive: true }).sort({ createdAt: -1 })
             },
@@ -133,6 +138,11 @@ export const getMe = async (req, res) => {
             streak: user.streak,
             badges: user.badges,
             lastStreakDate: user.lastStreakDate,
+            challengesJoined: user.challengesJoined || [],
+            challengesCompleted: user.challengesCompleted || [],
+            challengeProgress: user.challengeProgress || {},
+            likedPostIds: user.likedPostIds || [],
+            savedPostIds: user.savedPostIds || [],
             name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
             activeWellnessPlan: await store.wellness.findOne({ userId: user.id, isActive: true }).sort({ createdAt: -1 })
         });
@@ -163,6 +173,12 @@ export const updateProfile = async (req, res) => {
                 ...(streak !== undefined && { streak: parseInt(streak) }),
                 ...(badges !== undefined && { badges }),
                 ...(lastStreakDate !== undefined && { lastStreakDate: lastStreakDate ? new Date(lastStreakDate) : null }),
+                ...(likedPostIds !== undefined && { likedPostIds }),
+                ...(savedPostIds !== undefined && { savedPostIds }),
+                ...(registeredEvents !== undefined && { registeredEvents }),
+                ...(req.body.challengesJoined !== undefined && { challengesJoined: req.body.challengesJoined }),
+                ...(req.body.challengesCompleted !== undefined && { challengesCompleted: req.body.challengesCompleted }),
+                ...(req.body.challengeProgress !== undefined && { challengeProgress: req.body.challengeProgress }),
             },
             { new: true }
         );
@@ -178,6 +194,11 @@ export const updateProfile = async (req, res) => {
             streak: updatedUser.streak,
             badges: updatedUser.badges,
             lastStreakDate: updatedUser.lastStreakDate,
+            challengesJoined: updatedUser.challengesJoined || [],
+            challengesCompleted: updatedUser.challengesCompleted || [],
+            challengeProgress: updatedUser.challengeProgress || {},
+            likedPostIds: updatedUser.likedPostIds || [],
+            savedPostIds: updatedUser.savedPostIds || [],
             name: updatedUser.username || (updatedUser.firstName && updatedUser.lastName ? `${updatedUser.firstName} ${updatedUser.lastName}` : updatedUser.email),
             activeWellnessPlan: await store.wellness.findOne({ userId: updatedUser.id, isActive: true }).sort({ createdAt: -1 })
         });
@@ -233,6 +254,11 @@ export const googleLogin = async (req, res) => {
                 streak: user.streak,
                 badges: user.badges,
                 lastStreakDate: user.lastStreakDate,
+                challengesJoined: user.challengesJoined || [],
+                challengesCompleted: user.challengesCompleted || [],
+                challengeProgress: user.challengeProgress || {},
+                likedPostIds: user.likedPostIds || [],
+                savedPostIds: user.savedPostIds || [],
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
                 activeWellnessPlan: await store.wellness.findOne({ userId: user.id, isActive: true }).sort({ createdAt: -1 })
             },

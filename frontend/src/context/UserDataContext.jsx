@@ -81,6 +81,9 @@ export function UserDataProvider({ children }) {
             likedPosts: user.likedPostIds || [],
             savedPosts: user.savedPostIds || [],
             registeredEvents: user.registeredEvents || [],
+            challengesJoined: user.challengesJoined || [],
+            challengesCompleted: user.challengesCompleted || [],
+            challengeProgress: user.challengeProgress || {},
         }));
         fetchAppointments();
         fetchAmbulanceRequests();
@@ -209,7 +212,10 @@ export function UserDataProvider({ children }) {
                 lastStreakDate: final.lastStreakDate,
                 likedPostIds: final.likedPosts,
                 savedPostIds: final.savedPosts,
-                registeredEvents: final.registeredEvents
+                registeredEvents: final.registeredEvents,
+                challengesJoined: final.challengesJoined,
+                challengesCompleted: final.challengesCompleted,
+                challengeProgress: final.challengeProgress
             });
             // Update AuthContext to keep user object in sync
             login(localStorage.getItem('token'), data);

@@ -496,14 +496,16 @@ export default function CommunityHub() {
         try {
             const { data } = await api.get('/community');
             const fetchedPosts = data.map(p => ({
-                ...p,
-                likes: p.likesCount,
-                isLiked: ud.isPostLiked(p.id),
+                id: p._id,
+                title: p.title,
+                content: p.content,
+                likes: p.likesCount || 0,
+                isLiked: ud.isPostLiked(p._id),
                 time: new Date(p.createdAt).toLocaleDateString(),
-                author: p.isAnonymous ? 'Anonymous' : (p.author.username || p.author.firstName || 'Anonymous'),
+                author: p.isAnonymous ? 'Anonymous' : (p.author?.username || p.author?.firstName || 'Anonymous'),
                 comments: (p.comments || []).map(c => ({
                     ...c,
-                    author: c.author.username || c.author.firstName || 'Anonymous',
+                    author: c.author?.username || c.author?.firstName || 'Anonymous',
                     time: new Date(c.createdAt).toLocaleDateString()
                 }))
             }));

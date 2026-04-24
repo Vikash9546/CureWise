@@ -233,9 +233,13 @@ export function UserDataProvider({ children }) {
     const checkStreak = useCallback(() => {
         persist(prev => {
             const today = new Date().toISOString().slice(0, 10);
-            if (prev.lastStreakDate === today) return prev;
+            // Ensure we only compare the date portion (YYYY-MM-DD)
+            const lastDate = prev.lastStreakDate ? new Date(prev.lastStreakDate).toISOString().slice(0, 10) : null;
+            
+            if (lastDate === today) return prev;
+            
             const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-            const newStreak = prev.lastStreakDate === yesterday ? prev.streak + 1 : 1;
+            const newStreak = lastDate === yesterday ? prev.streak + 1 : 1;
             let pts = prev.points + POINTS.DAILY_STREAK;
             let badges = [...prev.badges];
             if (newStreak >= 7 && !badges.includes('streak7')) { badges.push('streak7'); awardBadge('streak7'); }

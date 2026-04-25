@@ -391,8 +391,8 @@ export default function DoctorBooking() {
                                 <div key={apt.id} className="bg-white p-6 rounded-2xl border border-slate-100 border-l-4 border-l-violet-500 shadow-sm">
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <h3 className="font-bold text-slate-900">{apt.doctor?.name}</h3>
-                                            <p className="text-violet-600 text-xs">{apt.specialty}</p>
+                                            <h3 className="font-bold text-slate-900">{apt.doctorId?.name || 'Doctor'}</h3>
+                                            <p className="text-violet-600 text-xs font-medium">{apt.doctorId?.specialty || 'General'}</p>
                                         </div>
                                             <div className="flex items-center gap-1.5">
                                                 <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${apt.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-600' : apt.status === 'CANCELLED' ? 'bg-rose-50 text-rose-500' : 'bg-amber-50 text-amber-600'}`}>
@@ -407,7 +407,7 @@ export default function DoctorBooking() {
                                                     </button>
                                                 )}
                                                 <button 
-                                                    onClick={() => setDeleteModal({ isOpen: true, id: apt.id })}
+                                                    onClick={() => setDeleteModal({ isOpen: true, id: apt._id || apt.id })}
                                                     className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
                                                     title="Delete History"
                                                 >
@@ -415,9 +415,12 @@ export default function DoctorBooking() {
                                                 </button>
                                             </div>
                                     </div>
-                                    <div className="mt-4 pt-4 border-t border-slate-50 text-xs flex justify-between">
-                                        <span className="text-slate-500 italic">{new Date(apt.appointmentDate).toLocaleDateString()}</span>
-                                        <span className="font-bold text-emerald-600">₹{apt.paymentAmount} Paid</span>
+                                    <div className="mt-4 pt-4 border-t border-slate-50 text-xs flex justify-between items-center">
+                                        <div className="flex items-center gap-2 text-slate-500 italic">
+                                            <Calendar className="w-3 h-3" />
+                                            <span>{apt.slotId?.startTime ? new Date(apt.slotId.startTime).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Date TBD'}</span>
+                                        </div>
+                                        <span className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">₹{apt.payment?.amount || 0} Paid</span>
                                     </div>
                                 </div>
                             ))

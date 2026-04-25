@@ -66,6 +66,13 @@ export function UserDataProvider({ children }) {
     const [appointments, setAppointments] = useState([]);
     const [ambulanceRequests, setAmbulanceRequests] = useState([]);
 
+    // Locks to prevent parallel redundant hits
+    const fetchLocks = useRef({
+        appointments: false,
+        ambulance: false,
+        community: false
+    });
+
     // Sync profile when user changes
     useEffect(() => {
         if (!user) {
@@ -89,9 +96,15 @@ export function UserDataProvider({ children }) {
             challengeProgress: user.challengeProgress || {},
         }));
 
-        // Only fetch if we don't have data yet to prevent multiple hits on init
-        if (appointments.length === 0) fetchAppointments();
-        if (ambulanceRequests.length === 0) fetchAmbulanceRequests();
+        // Use locks to ensure we only have one active request at a time
+        if (appointments.length === 0 && !fetchLocks.current.appointments) {
+            fetchLocks.current.appointments = true;
+            fetchAppointments().finally(() => fetchLocks.current.appointments = false);
+        }
+        if (ambulanceRequests.length === 0 && !fetchLocks.current.ambulance) {
+            fetchLocks.current.ambulance = true;
+            fetchAmbulanceRequests().finally(() => fetchLocks.current.ambulance = false);
+        }
     }, [user, userId]); // eslint-disable-line
 
     const fetchAppointments = useCallback(async () => {

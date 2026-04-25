@@ -520,7 +520,7 @@ export default function CommunityHub() {
 
     useEffect(() => {
         fetchPosts();
-    }, [user, ud.profile.likedPosts]);
+    }, [activeCategory, activeSort]); // Only re-fetch on filter change, not on user/like sync
 
     // ── Post Actions ──
     const handleLike = async (id) => {
@@ -541,12 +541,10 @@ export default function CommunityHub() {
 
         try {
             await ud.toggleLikePost(id);
-            // Refresh to get authoritative state from server
-            fetchPosts();
             showToast(ud.isPostLiked(id) ? 'Unliked.' : '+2 pts for liking! 💚');
         } catch (error) {
-            // Revert on failure
-            fetchPosts();
+            // Revert is handled by the next authoritative fetch or manual refresh
+            console.error("Like error:", error);
         }
     };
 

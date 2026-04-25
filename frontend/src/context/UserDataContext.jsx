@@ -73,12 +73,16 @@ export function UserDataProvider({ children }) {
         community: false
     });
 
+    // Session trackers to prevent any redundant hits after first success
+    const syncedResources = useRef(new Set());
+
     // Sync profile when user changes
     useEffect(() => {
         if (!user) {
             setProfileState(DEFAULT_PROFILE);
             setAppointments([]);
             setAmbulanceRequests([]);
+            syncedResources.current.clear();
             return;
         }
 
@@ -96,14 +100,14 @@ export function UserDataProvider({ children }) {
             challengeProgress: user.challengeProgress || {},
         }));
 
-        // Use locks to ensure we only have one active request at a time
-        if (appointments.length === 0 && !fetchLocks.current.appointments) {
-            fetchLocks.current.appointments = true;
-            fetchAppointments().finally(() => fetchLocks.current.appointments = false);
+        // Absolute single-hit logic using Session Tracker
+        if (!syncedResources.current.has('appointments')) {
+            syncedResources.current.add('appointments');
+            fetchAppointments();
         }
-        if (ambulanceRequests.length === 0 && !fetchLocks.current.ambulance) {
-            fetchLocks.current.ambulance = true;
-            fetchAmbulanceRequests().finally(() => fetchLocks.current.ambulance = false);
+        if (!syncedResources.current.has('ambulance')) {
+            syncedResources.current.add('ambulance');
+            fetchAmbulanceRequests();
         }
     }, [user, userId]); // eslint-disable-line
 

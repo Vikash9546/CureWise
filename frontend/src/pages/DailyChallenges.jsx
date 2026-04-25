@@ -57,7 +57,7 @@ export default function DailyChallenges() {
     // Run streak check once per session on mount
     useEffect(() => {
         if (user) ud.checkStreak();
-    }, [user]); // eslint-disable-line
+    }, []); // eslint-disable-line
 
     return (
         <div className="min-h-screen bg-[#f8f9f4] py-20 px-4">

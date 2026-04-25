@@ -191,6 +191,9 @@ export function UserDataProvider({ children }) {
         const prev = profile;
         const next = typeof updater === 'function' ? updater(prev) : updater;
 
+        // Skip if no changes
+        if (next === prev) return;
+
         // Auto-award points-based badges locally (backend should also do this, but for UI feedback)
         const earned = [...(next.badges || [])];
         BADGE_DEFS.filter(b => b.auto && !earned.includes(b.id) && next.points >= b.minPoints)

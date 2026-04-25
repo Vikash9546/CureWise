@@ -70,8 +70,11 @@ export function UserDataProvider({ children }) {
     useEffect(() => {
         if (!user) {
             setProfileState(DEFAULT_PROFILE);
+            setAppointments([]);
+            setAmbulanceRequests([]);
             return;
         }
+
         setProfileState(prev => ({
             ...prev,
             points: user.points || 0,
@@ -85,9 +88,11 @@ export function UserDataProvider({ children }) {
             challengesCompleted: user.challengesCompleted || [],
             challengeProgress: user.challengeProgress || {},
         }));
-        fetchAppointments();
-        fetchAmbulanceRequests();
-    }, [user, userId]);
+
+        // Only fetch if we don't have data yet to prevent multiple hits on init
+        if (appointments.length === 0) fetchAppointments();
+        if (ambulanceRequests.length === 0) fetchAmbulanceRequests();
+    }, [user, userId]); // eslint-disable-line
 
     const fetchAppointments = useCallback(async () => {
         if (!userId) return;

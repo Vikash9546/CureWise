@@ -1,6 +1,7 @@
 # CureWise - Holistic Wellness & Healing Platform
 
 CureWise is a comprehensive health and wellness ecosystem designed to bridge the gap between traditional medicine and holistic healing. It empowers users with AI-driven personalized wellness plans, a vibrant community support system, and direct access to medical experts.
+Demo = [Live](https://cure-wise.vercel.app/)
 
 ## Key Features
 

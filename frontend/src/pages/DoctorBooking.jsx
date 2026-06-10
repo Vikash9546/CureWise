@@ -36,9 +36,9 @@ export default function DoctorBooking() {
     });
 
     useEffect(() => {
-        if (user) {
-            fetchDoctors();
-        }
+        
+        fetchDoctors();
+        
     }, [user, searchQuery, selectedSpecialty, currentPage]);
 
     useEffect(() => {

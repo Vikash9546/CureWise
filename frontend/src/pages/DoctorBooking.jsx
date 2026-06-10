@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Heart, Calendar, Clock, User, FileText, CheckCircle2, ChevronDown, Search, Filter, Star, CreditCard, X, Building2 as Hospital, Globe, MapPin as MapPinIcon, Navigation2, Loader2, Trash2, AlertTriangle } from 'lucide-react';
+import { Heart, Calendar, Clock, User, FileText, CheckCircle2, ChevronDown, Search, Filter, Star, CreditCard, X, Building2 as Hospital, Globe, MapPin as MapPinIcon, Navigation2, Loader2, Trash2, AlertTriangle, XCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useUserData } from '../context/UserDataContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -23,7 +23,18 @@ export default function DoctorBooking() {
     const [totalPages, setTotalPages] = useState(1);
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
     const [cancelModal, setCancelModal] = useState({ isOpen: false, id: null });
+    const [doctorsbyprice, setDoctorsbyprice] = useState([])
+    const [sortOrder, setSortOrder] = useState('');
 
+    // Handle sorting
+    const sortOptions = [
+        { label: 'Price: Low to High', value: 'price_asc' },
+        { label: 'Price: High to Low', value: 'price_desc' },
+        { label: 'Experience: Low to High', value: 'experience_asc' },
+        { label: 'Experience: High to Low', value: 'experience_desc' },
+        { label: 'Rating: Low to High', value: 'rating_asc' },
+        { label: 'Rating: High to Low', value: 'rating_desc' },
+    ];
     // Booking Flow States
     const [step, setStep] = useState(1); // 1: List, 2: Form, 3: Payment, 4: Success
     const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -35,10 +46,11 @@ export default function DoctorBooking() {
         notes: ''
     });
 
+
     useEffect(() => {
-        
-        fetchDoctors();
-        
+        if (user) {
+            fetchDoctors();
+        }
     }, [user, searchQuery, selectedSpecialty, currentPage]);
 
     useEffect(() => {
@@ -54,6 +66,7 @@ export default function DoctorBooking() {
     }, [user]);
 
     const fetchDoctors = async () => {
+        console.log("fetchDoctors called with sortOrder:", sortOrder, "searchQuery:", searchQuery, "selectedSpecialty:", selectedSpecialty);
         setDoctorsLoading(true);
         try {
             const { data } = await api.get('/doctors', {
@@ -61,6 +74,7 @@ export default function DoctorBooking() {
                     page: currentPage,
                     search: searchQuery,
                     specialty: selectedSpecialty,
+                    sortBy: sortOrder,
                     limit: 9
                 }
             });
@@ -72,6 +86,7 @@ export default function DoctorBooking() {
             setDoctorsLoading(false);
         }
     };
+    
 
     const handleInitiateBooking = (doctor) => {
         setSelectedDoctor(doctor);
@@ -131,6 +146,11 @@ export default function DoctorBooking() {
         setCurrentPage(1);
     };
 
+    const handleSortOrderChange = (e) => {
+        setSortOrder(e.target.value);
+        setCurrentPage(1);
+    };
+
     if (authLoading) {
         return (
             <div className="max-w-6xl mx-auto p-8 animate-pulse">
@@ -166,7 +186,7 @@ export default function DoctorBooking() {
 
             {step === 1 && (
                 <>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <div className="md:col-span-2 relative group">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-violet-600 transition-colors" />
                             <input
@@ -188,14 +208,32 @@ export default function DoctorBooking() {
                             </select>
                             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
                         </div>
+                        <div className="relative group">
+                            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-violet-600 transition-colors" />
+                            <select
+                                className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 text-slate-800 appearance-none focus:outline-none focus:border-violet-500/50 shadow-sm cursor-pointer"
+                                value={sortOrder}
+                                onChange={handleSortOrderChange}
+                            >
+                                <option value="">Sort by: Relevance</option>
+                                {sortOptions.map(option => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                        </div>
                     </div>
+                    
 
                     <div className="flex flex-wrap justify-center gap-4 mb-12">
-                        {(searchQuery !== '' || selectedSpecialty !== 'All') && (
+                        {(searchQuery !== '' || selectedSpecialty !== 'All' || sortOrder !== '') && (
                             <button
                                 onClick={() => {
                                     setSearchQuery('');
                                     setSelectedSpecialty('All');
+                                    setSortOrder('');
                                 }}
                                 className="flex items-center gap-2 px-6 py-2 rounded-full bg-violet-600 text-white text-xs font-bold hover:bg-violet-700 transition-all shadow-md"
                             >

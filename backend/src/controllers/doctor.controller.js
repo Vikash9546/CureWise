@@ -8,7 +8,7 @@ export const getAllDoctors = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 9;
     const skip = (page - 1) * limit;
-    const { search, specialty } = req.query;
+    const { search, specialty, sortBy } = req.query;
 
     const query = {};
     if (specialty && specialty !== 'All') {
@@ -22,10 +22,41 @@ export const getAllDoctors = async (req, res) => {
         ];
     }
 
+    console.log("getAllDoctors called with query:", req.query);
+    let sortObj = { name: 1 };
+    if (sortBy) {
+        switch (sortBy) {
+            case "price_asc":
+                sortObj = { consultancyFee: 1 };
+                break;
+            case "price_desc":
+                sortObj = { consultancyFee: -1 };
+                break;
+            case "experience_asc":
+                sortObj = { experience: 1 };
+                break;
+            case "experience_desc":
+                sortObj = { experience: -1 };
+                break;
+            case "rating_asc":
+                sortObj = { rating: 1 };
+                break;
+            case "rating_desc":
+                sortObj = { rating: -1 };
+                break;
+            case "name":
+                sortObj = { name: 1 };
+                break;
+            default:
+                sortObj = { name: 1 };
+        }
+    }
+    console.log("getAllDoctors using sortObj:", sortObj);
+
     try {
         const [doctors, total] = await Promise.all([
             store.doctor.find(query)
-                .sort({ name: 1 })
+                .sort(sortObj)
                 .skip(skip)
                 .limit(limit),
             store.doctor.countDocuments(query)
@@ -212,5 +243,7 @@ export const createDoctorSlot = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+
 
 export { SPECIALTIES };

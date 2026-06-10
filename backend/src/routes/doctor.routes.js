@@ -5,7 +5,7 @@ import { authenticate, authorize } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
-router.get("/", authenticate, getAllDoctors);
+router.get("/", getAllDoctors);
 router.post("/", authenticate, createAppointment);
 router.get("/my", authenticate, getMyAppointments);
 router.get("/:id", authenticate, getDoctorById);

@@ -48,9 +48,7 @@ export default function DoctorBooking() {
 
 
     useEffect(() => {
-        if (user) {
-            fetchDoctors();
-        }
+        fetchDoctors();
     }, [user, searchQuery, selectedSpecialty, currentPage, sortOrder]);
 
     useEffect(() => {
@@ -457,7 +455,7 @@ export default function DoctorBooking() {
                                     <div className="mt-4 pt-4 border-t border-slate-50 text-xs flex justify-between items-center">
                                         <div className="flex items-center gap-2 text-slate-500 italic">
                                             <Calendar className="w-3 h-3" />
-                                            <span>{apt.slotId?.startTime ? new Date(apt.slotId.startTime).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Date TBD'}</span>
+                                            <span>{apt.appointmentDate ? new Date(apt.appointmentDate).toLocaleDateString() : (apt.slotId?.startTime ? new Date(apt.slotId.startTime).toLocaleDateString() : 'Date TBD')}</span>
                                         </div>
                                         <span className="font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">₹{apt.payment?.amount || 0} Paid</span>
                                     </div>

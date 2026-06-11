@@ -97,8 +97,9 @@ export const getDoctorById = async (req, res) => {
 
 export const createAppointment = async (req, res) => {
     const userId = req.user.id;
-    const { patientName, patientAge, doctorId, slotId, notes } = req.body;
+    const { patientName, patientAge, doctorId, slotId, notes, appointmentDate } = req.body;
     const { simulated } = req.body;
+    
 
     if (!patientName || !patientAge || !doctorId) {
         return res.status(400).json({ message: "patientName, patientAge, and doctorId are required" });
@@ -125,6 +126,7 @@ export const createAppointment = async (req, res) => {
             slotId: slotId || new mongoose.Types.ObjectId(),
             patientName,
             patientAge: parseInt(patientAge),
+            appointmentDate,
             status: simulated ? "CONFIRMED" : "PENDING",
             payment: {
                 amount: doctor.consultancyFee,
@@ -154,6 +156,7 @@ export const createAppointment = async (req, res) => {
 
 export const getMyAppointments = async (req, res) => {
     const userId = req.user.id;
+    // console.log("getMyAppointments called with userId:", userId);
     try {
         const appointments = await store.appointment.find({ userId })
             .populate('doctorId')

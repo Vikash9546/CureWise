@@ -22,6 +22,7 @@ const appointmentSchema = new mongoose.Schema(
 
     patientName: String,
     patientAge: Number,
+    appointmentDate: Date,
 
     status: {
       type: String,

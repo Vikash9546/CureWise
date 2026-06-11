@@ -480,7 +480,7 @@ export default function Profile() {
                                                                 <p className="font-bold text-slate-900 group-hover:text-violet-600 transition-colors">{apt.doctorId?.name || 'Doctor Consultation'}</p>
                                                                 <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">{apt.doctorId?.specialty || apt.specialty || 'General'}</p>
                                                                 <div className="flex items-center gap-2 mt-2 text-[10px] text-slate-400 font-bold">
-                                                                    <Calendar className="w-3 h-3" /> {apt.slotId?.startTime ? new Date(apt.slotId.startTime).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Date TBD'}
+                                                                    <Calendar className="w-3 h-3" /> {apt.appointmentDate ? new Date(apt.appointmentDate).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : (apt.slotId?.startTime ? new Date(apt.slotId.startTime).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Date TBD')}
                                                                 </div>
                                                             </div>
                                                         </div>

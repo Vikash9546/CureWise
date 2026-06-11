@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import store from "../models/index.js";
-import mongoose from "mongoose";
 import { addPoints } from "../services/points.service.js";
 import { OAuth2Client } from "google-auth-library";
 
@@ -9,19 +8,18 @@ import { OAuth2Client } from "google-auth-library";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
 const client = new OAuth2Client(GOOGLE_CLIENT_ID);
 
-
 export const register = async (req, res) => {
     const { email, password, role, firstName, lastName, username } = req.body;
 
     try {
-        const existingUser = await store.user.findOne({ email });
+        const existingUser = await store.user.findUnique({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ message: "User already exists" });
         }
 
         // Check if username is already taken
         if (username) {
-            const existingUsername = await store.user.findOne({ username });
+            const existingUsername = await store.user.findUnique({ where: { username } });
             if (existingUsername) {
                 return res.status(400).json({ message: "Username is already taken" });
             }
@@ -29,12 +27,21 @@ export const register = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await store.user.create({
-            email,
-            firstName,
-            lastName,
-            username: username || null,
-            password: hashedPassword,
-            role: role || "CUSTOMER",
+            data: {
+                email,
+                firstName,
+                lastName,
+                username: username || null,
+                password: hashedPassword,
+                role: role || "CUSTOMER",
+                badges: ["beginner"],
+                challengesJoined: [],
+                challengesCompleted: [],
+                challengeProgress: {},
+                likedPostIds: [],
+                savedPostIds: [],
+                registeredEvents: []
+            }
         });
 
         res.status(201).json({ message: "User created successfully", userId: user.id });
@@ -47,7 +54,7 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        const user = await store.user.findOne({ email });
+        const user = await store.user.findUnique({ where: { email } });
         if (!user || !user.password) {
             return res.status(401).json({ message: "Invalid credentials or account uses Google Sign-In" });
         }
@@ -77,42 +84,53 @@ export const login = async (req, res) => {
                 newStreak = 1;
                 shouldReward = true;
             }
-            // If diffDays === 0 (same day), do nothing
         }
 
         if (shouldReward) {
-            user.streak = newStreak;
-            user.lastStreakDate = now;
-            await user.save();
-            await addPoints(user._id, "STREAK_BONUS", user._id);
+            await store.user.update({
+                where: { id: user.id },
+                data: {
+                    streak: newStreak,
+                    lastStreakDate: now
+                }
+            });
+            await addPoints(user.id, "STREAK_BONUS", user.id);
         }
 
+        // Fetch user again to get updated streak/points
+        const updatedUserObj = shouldReward ? await store.user.findUnique({ where: { id: user.id } }) : user;
+
         const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
+            { id: updatedUserObj.id, email: updatedUserObj.email, role: updatedUserObj.role },
             process.env.JWT_SECRET || "secret",
             { expiresIn: "24h" }
         );
 
+        const activeWellnessPlan = await store.wellnessPlan.findFirst({
+            where: { userId: updatedUserObj.id, isActive: true },
+            orderBy: { createdAt: 'desc' }
+        });
+
         res.json({
             token,
             user: {
-                id: user.id,
-                email: user.email,
-                role: user.role,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                username: user.username,
-                points: user.points,
-                streak: user.streak,
-                badges: user.badges,
-                lastStreakDate: user.lastStreakDate,
-                challengesJoined: user.challengesJoined || [],
-                challengesCompleted: user.challengesCompleted || [],
-                challengeProgress: user.challengeProgress || {},
-                likedPostIds: user.likedPostIds || [],
-                savedPostIds: user.savedPostIds || [],
-                name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
-                activeWellnessPlan: await store.wellness.findOne({ userId: user.id, isActive: true }).sort({ createdAt: -1 })
+                id: updatedUserObj.id,
+                email: updatedUserObj.email,
+                role: updatedUserObj.role,
+                firstName: updatedUserObj.firstName,
+                lastName: updatedUserObj.lastName,
+                username: updatedUserObj.username,
+                points: updatedUserObj.points,
+                streak: updatedUserObj.streak,
+                badges: updatedUserObj.badges,
+                lastStreakDate: updatedUserObj.lastStreakDate,
+                challengesJoined: updatedUserObj.challengesJoined || [],
+                challengesCompleted: updatedUserObj.challengesCompleted || [],
+                challengeProgress: updatedUserObj.challengeProgress || {},
+                likedPostIds: updatedUserObj.likedPostIds || [],
+                savedPostIds: updatedUserObj.savedPostIds || [],
+                name: updatedUserObj.username || (updatedUserObj.firstName && updatedUserObj.lastName ? `${updatedUserObj.firstName} ${updatedUserObj.lastName}` : updatedUserObj.email),
+                activeWellnessPlan
             },
         });
     } catch (error) {
@@ -123,10 +141,16 @@ export const login = async (req, res) => {
 
 export const getMe = async (req, res) => {
     try {
-        const user = await store.user.findById(req.user.id);
+        const user = await store.user.findUnique({ where: { id: req.user.id } });
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
+
+        const activeWellnessPlan = await store.wellnessPlan.findFirst({
+            where: { userId: user.id, isActive: true },
+            orderBy: { createdAt: 'desc' }
+        });
+
         res.json({
             id: user.id,
             email: user.email,
@@ -144,7 +168,7 @@ export const getMe = async (req, res) => {
             likedPostIds: user.likedPostIds || [],
             savedPostIds: user.savedPostIds || [],
             name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
-            activeWellnessPlan: await store.wellness.findOne({ userId: user.id, isActive: true }).sort({ createdAt: -1 })
+            activeWellnessPlan
         });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
@@ -157,15 +181,15 @@ export const updateProfile = async (req, res) => {
     try {
         // Check if username is already taken by another user
         if (username) {
-            const existingUsername = await store.user.findOne({ username });
-            if (existingUsername && existingUsername._id.toString() !== req.user.id) {
+            const existingUsername = await store.user.findFirst({ where: { username } });
+            if (existingUsername && existingUsername.id !== req.user.id) {
                 return res.status(400).json({ message: "Username is already taken" });
             }
         }
 
-        const updatedUser = await store.user.findByIdAndUpdate(
-            req.user.id,
-            {
+        const updatedUser = await store.user.update({
+            where: { id: req.user.id },
+            data: {
                 ...(username !== undefined && { username: username || null }),
                 ...(firstName !== undefined && { firstName }),
                 ...(lastName !== undefined && { lastName }),
@@ -179,9 +203,13 @@ export const updateProfile = async (req, res) => {
                 ...(req.body.challengesJoined !== undefined && { challengesJoined: req.body.challengesJoined }),
                 ...(req.body.challengesCompleted !== undefined && { challengesCompleted: req.body.challengesCompleted }),
                 ...(req.body.challengeProgress !== undefined && { challengeProgress: req.body.challengeProgress }),
-            },
-            { new: true }
-        );
+            }
+        });
+
+        const activeWellnessPlan = await store.wellnessPlan.findFirst({
+            where: { userId: updatedUser.id, isActive: true },
+            orderBy: { createdAt: 'desc' }
+        });
 
         res.json({
             id: updatedUser.id,
@@ -200,7 +228,7 @@ export const updateProfile = async (req, res) => {
             likedPostIds: updatedUser.likedPostIds || [],
             savedPostIds: updatedUser.savedPostIds || [],
             name: updatedUser.username || (updatedUser.firstName && updatedUser.lastName ? `${updatedUser.firstName} ${updatedUser.lastName}` : updatedUser.email),
-            activeWellnessPlan: await store.wellness.findOne({ userId: updatedUser.id, isActive: true }).sort({ createdAt: -1 })
+            activeWellnessPlan
         });
     } catch (error) {
         console.error("Update profile error:", error);
@@ -223,15 +251,24 @@ export const googleLogin = async (req, res) => {
         }
 
         const email = payload.email;
-        let user = await store.user.findOne({ email });
+        let user = await store.user.findUnique({ where: { email } });
 
         if (!user) {
             // Create user without password since they use Google
             user = await store.user.create({
-                email,
-                firstName: payload.given_name,
-                lastName: payload.family_name,
-                role: "CUSTOMER",
+                data: {
+                    email,
+                    firstName: payload.given_name,
+                    lastName: payload.family_name,
+                    role: "CUSTOMER",
+                    badges: ["beginner"],
+                    challengesJoined: [],
+                    challengesCompleted: [],
+                    challengeProgress: {},
+                    likedPostIds: [],
+                    savedPostIds: [],
+                    registeredEvents: []
+                }
             });
         }
 
@@ -240,6 +277,11 @@ export const googleLogin = async (req, res) => {
             process.env.JWT_SECRET || "secret",
             { expiresIn: "24h" }
         );
+
+        const activeWellnessPlan = await store.wellnessPlan.findFirst({
+            where: { userId: user.id, isActive: true },
+            orderBy: { createdAt: 'desc' }
+        });
 
         res.json({
             token,
@@ -260,7 +302,7 @@ export const googleLogin = async (req, res) => {
                 likedPostIds: user.likedPostIds || [],
                 savedPostIds: user.savedPostIds || [],
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
-                activeWellnessPlan: await store.wellness.findOne({ userId: user.id, isActive: true }).sort({ createdAt: -1 })
+                activeWellnessPlan
             },
         });
     } catch (error) {

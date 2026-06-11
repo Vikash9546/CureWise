@@ -1,31 +1,50 @@
 import store from "../models/index.js";
-import mongoose from "mongoose";
 import { addPoints } from "../services/points.service.js";
 
 export const getPosts = async (req, res) => {
     try {
         const userId = req.user?.id;
-        const posts = await store.post.find()
-            .populate('authorId', 'username firstName lastName email')
-            .sort({ createdAt: -1 })
-            .lean();
+        const posts = await store.post.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: {
+                author: {
+                    select: {
+                        username: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true
+                    }
+                }
+            }
+        });
         
         let userLikedIds = [];
         if (userId) {
-            const user = await store.user.findById(userId).select('likedPostIds');
-            userLikedIds = user?.likedPostIds?.map(id => id.toString()) || [];
+            const user = await store.user.findUnique({
+                where: { id: userId },
+                select: { likedPostIds: true }
+            });
+            userLikedIds = Array.isArray(user?.likedPostIds) ? user.likedPostIds : [];
         }
 
-        // Add counts and isLiked status
-        const postsWithStatus = posts.map(post => ({
-            ...post,
-            id: post._id,
-            isLiked: userLikedIds.includes(post._id.toString()),
-            _count: { 
-                comments: post.commentsCount || 0, 
-                likes: post.likesCount || 0 
-            }
-        }));
+        const postsWithStatus = posts.map(post => {
+            const authorData = post.author;
+            const mappedPost = {
+                ...post,
+                authorId: authorData,
+            };
+            delete mappedPost.author;
+
+            return {
+                ...mappedPost,
+                id: post.id,
+                isLiked: userLikedIds.includes(post.id),
+                _count: { 
+                    comments: post.commentsCount || 0, 
+                    likes: post.likesCount || 0 
+                }
+            };
+        });
 
         res.json(postsWithStatus);
     } catch (error) {
@@ -39,17 +58,19 @@ export const createPost = async (req, res) => {
 
     try {
         const post = await store.post.create({
-            type,
-            category,
-            title,
-            content,
-            headline,
-            initialState,
-            currentState,
-            duration,
-            tags: tags || [],
-            isAnonymous: isAnonymous || false,
-            authorId: req.user.id
+            data: {
+                type,
+                category,
+                title,
+                content,
+                headline,
+                initialState,
+                currentState,
+                duration,
+                tags: tags || [],
+                isAnonymous: isAnonymous || false,
+                authorId: req.user.id
+            }
         });
         res.status(201).json(post);
     } catch (error) {
@@ -60,25 +81,60 @@ export const createPost = async (req, res) => {
 export const getPostById = async (req, res) => {
     const { id } = req.params;
     try {
-        const post = await store.post.findById(id)
-            .populate('authorId', 'username firstName lastName email')
-            .lean();
+        const post = await store.post.findUnique({
+            where: { id },
+            include: {
+                author: {
+                    select: {
+                        username: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true
+                    }
+                }
+            }
+        });
         
         if (!post) return res.status(404).json({ message: "Post not found" });
 
-        const comments = await store.comment.find({ postId: id })
-            .populate('userId', 'username firstName lastName')
-            .sort({ createdAt: 1 });
-        
-        res.json({
+        const comments = await store.comment.findMany({
+            where: { postId: id },
+            include: {
+                user: {
+                    select: {
+                        username: true,
+                        firstName: true,
+                        lastName: true
+                    }
+                }
+            },
+            orderBy: { createdAt: 'asc' }
+        });
+
+        const mappedComments = comments.map(c => {
+            const userData = c.user;
+            const mappedComment = {
+                ...c,
+                userId: userData
+            };
+            delete mappedComment.user;
+            return mappedComment;
+        });
+
+        const authorData = post.author;
+        const mappedPost = {
             ...post,
-            id: post._id,
-            comments,
+            id: post.id,
+            authorId: authorData,
+            comments: mappedComments,
             _count: { 
                 likes: post.likesCount || 0,
                 comments: post.commentsCount || 0
             }
-        });
+        };
+        delete mappedPost.author;
+
+        res.json(mappedPost);
     } catch (error) {
         console.error("Get post error:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -96,17 +152,22 @@ export const addComment = async (req, res) => {
         }
 
         const comment = await store.comment.create({
-            text,
-            postId,
-            userId: userId
+            data: {
+                text,
+                postId,
+                userId: userId
+            }
         });
 
-        await store.post.findByIdAndUpdate(postId, { $inc: { commentsCount: 1 } });
+        await store.post.update({
+            where: { id: postId },
+            data: { commentsCount: { increment: 1 } }
+        });
 
         // Add points for commenting
-        await addPoints(userId, "COMMENT", comment._id);
+        await addPoints(userId, "COMMENT", comment.id);
 
-        const updatedUser = await store.user.findById(userId);
+        const updatedUser = await store.user.findUnique({ where: { id: userId } });
 
         return res.status(201).json({
             comment,
@@ -120,8 +181,7 @@ export const addComment = async (req, res) => {
         console.error("EXPLICIT ERROR in addComment:", error);
         return res.status(500).json({ 
             message: "Internal server error",
-            error: error.message,
-            stack: error.stack 
+            error: error.message
         });
     }
 };
@@ -131,40 +191,44 @@ export const toggleLikePost = async (req, res) => {
         const { postId } = req.params;
         const userId = req.user?.id;
 
-        console.log("Toggle Like - Input:", { postId, userId });
-
         if (!postId || !userId) {
             return res.status(400).json({ message: "Missing postId or userId" });
         }
 
-        if (!mongoose.Types.ObjectId.isValid(postId)) {
-            return res.status(400).json({ message: "Invalid postId format" });
-        }
-
-        const pId = new mongoose.Types.ObjectId(postId);
-        const uId = new mongoose.Types.ObjectId(userId);
-
-        console.log("Checking for existing like...");
-        const existingLike = await store.like.findOne({ 
-            targetId: pId, 
-            userId: uId, 
-            targetType: "POST" 
+        const existingLike = await store.postLike.findUnique({
+            where: {
+                userId_postId: {
+                    userId,
+                    postId
+                }
+            }
         });
 
+        const user = await store.user.findUnique({ where: { id: userId } });
+        let likedPostIds = Array.isArray(user?.likedPostIds) ? user.likedPostIds : [];
+
         if (existingLike) {
-            console.log("Found existing like:", existingLike._id);
-            await store.like.findByIdAndDelete(existingLike._id);
-            await store.post.findByIdAndUpdate(pId, { $inc: { likesCount: -1 } });
+            await store.postLike.delete({
+                where: {
+                    userId_postId: {
+                        userId,
+                        postId
+                    }
+                }
+            });
+
+            await store.post.update({
+                where: { id: postId },
+                data: { likesCount: { decrement: 1 } }
+            });
             
-            // Deduct points for unliking
-            console.log("Deducting points for unlike");
-            await addPoints(uId, "UNLIKE_POST", existingLike._id);
+            await addPoints(userId, "UNLIKE_POST", postId);
 
-            // Remove from User.likedPostIds
-            await store.user.findByIdAndUpdate(uId, { $pull: { likedPostIds: pId } });
-
-            const updatedUser = await store.user.findById(uId);
-            console.log("Like removed. User points:", updatedUser?.points);
+            likedPostIds = likedPostIds.filter(id => id !== postId);
+            const updatedUser = await store.user.update({
+                where: { id: userId },
+                data: { likedPostIds }
+            });
 
             return res.json({ 
                 liked: false, 
@@ -176,25 +240,27 @@ export const toggleLikePost = async (req, res) => {
                 } : null
             });
         } else {
-            console.log("Creating new like...");
-            const newLike = await store.like.create({ 
-                targetId: pId, 
-                userId: uId, 
-                targetType: "POST" 
+            await store.postLike.create({
+                data: {
+                    userId,
+                    postId
+                }
             });
 
-            console.log("New like created:", newLike._id);
-            await store.post.findByIdAndUpdate(pId, { $inc: { likesCount: 1 } });
+            await store.post.update({
+                where: { id: postId },
+                data: { likesCount: { increment: 1 } }
+            });
             
-            // Add points for liking
-            console.log("Awarding points for like");
-            await addPoints(uId, "LIKE_POST", newLike._id);
+            await addPoints(userId, "LIKE_POST", postId);
 
-            // Add to User.likedPostIds
-            await store.user.findByIdAndUpdate(uId, { $addToSet: { likedPostIds: pId } });
-
-            const updatedUser = await store.user.findById(uId);
-            console.log("Like added. User points:", updatedUser?.points);
+            if (!likedPostIds.includes(postId)) {
+                likedPostIds.push(postId);
+            }
+            const updatedUser = await store.user.update({
+                where: { id: userId },
+                data: { likedPostIds }
+            });
 
             return res.json({ 
                 liked: true, 
@@ -210,8 +276,7 @@ export const toggleLikePost = async (req, res) => {
         console.error("EXPLICIT ERROR in toggleLikePost:", error);
         return res.status(500).json({ 
             message: "Internal server error",
-            error: error.message,
-            stack: error.stack 
+            error: error.message
         });
     }
 };
@@ -225,19 +290,23 @@ export const toggleSavePost = async (req, res) => {
             return res.status(400).json({ message: "Missing postId or userId" });
         }
 
-        const user = await store.user.findById(userId);
-        const isSaved = user.savedPostIds.includes(postId);
+        const user = await store.user.findUnique({ where: { id: userId } });
+        let savedPostIds = Array.isArray(user?.savedPostIds) ? user.savedPostIds : [];
+        const isSaved = savedPostIds.includes(postId);
         
-        const update = isSaved 
-            ? { $pull: { savedPostIds: postId } } 
-            : { $addToSet: { savedPostIds: postId } };
+        if (isSaved) {
+            savedPostIds = savedPostIds.filter(id => id !== postId);
+        } else {
+            savedPostIds.push(postId);
+        }
             
-        await store.user.findByIdAndUpdate(userId, update);
+        const updatedUser = await store.user.update({
+            where: { id: userId },
+            data: { savedPostIds }
+        });
         
-        // Award points for saving
         await addPoints(userId, isSaved ? "UNSAVE_POST" : "SAVE_POST", postId);
 
-        const updatedUser = await store.user.findById(userId);
         res.json({ 
             message: "Save status updated", 
             saved: !isSaved,
@@ -251,22 +320,52 @@ export const toggleSavePost = async (req, res) => {
 
 export const joinChallenge = async (req, res) => {
     try {
-        const { id } = req.params; // Challenge ID
+        const { id } = req.params;
         const userId = req.user?.id;
 
         if (!id || !userId) return res.status(400).json({ message: "Missing data" });
 
-        // Update user: add to joined challenges
-        await store.user.findByIdAndUpdate(userId, {
-            $addToSet: { challengesJoined: id }
+        const user = await store.user.findUnique({ where: { id: userId } });
+        let challengesJoined = Array.isArray(user?.challengesJoined) ? user.challengesJoined : [];
+
+        if (!challengesJoined.includes(id)) {
+            challengesJoined.push(id);
+        }
+
+        const challenge = await store.challenge.findUnique({ where: { id } });
+        if (!challenge) {
+            await store.challenge.create({
+                data: {
+                    id,
+                    title: `Challenge #${id}`,
+                    description: "Seeded challenge",
+                    durationDays: 30,
+                    points: 50
+                }
+            });
+        }
+
+        await store.userChallenge.upsert({
+            where: {
+                userId_challengeId: {
+                    userId,
+                    challengeId: id
+                }
+            },
+            update: {},
+            create: {
+                userId,
+                challengeId: id
+            }
         });
 
-        // Award points (+5)
-        // Use a deterministic ID for the pointLog reference
-        const refId = new mongoose.Types.ObjectId(id.padStart(24, '0').slice(-24));
-        await addPoints(userId, "JOIN_CHALLENGE", refId);
+        const updatedUser = await store.user.update({
+            where: { id: userId },
+            data: { challengesJoined }
+        });
 
-        const updatedUser = await store.user.findById(userId);
+        await addPoints(userId, "JOIN_CHALLENGE", id);
+
         res.json({
             message: "Joined challenge",
             user: { 
@@ -288,17 +387,35 @@ export const logChallengeDay = async (req, res) => {
 
         if (!id || !userId) return res.status(400).json({ message: "Missing data" });
 
-        // Increment progress in the Map
-        const user = await store.user.findById(userId);
-        const currentProgress = user.challengeProgress.get(id) || 0;
-        user.challengeProgress.set(id, currentProgress + 1);
-        await user.save();
+        const user = await store.user.findUnique({ where: { id: userId } });
+        const challengeProgress = (user?.challengeProgress && typeof user.challengeProgress === 'object') ? { ...user.challengeProgress } : {};
+        const currentProgress = challengeProgress[id] || 0;
+        challengeProgress[id] = currentProgress + 1;
 
-        // Award points (+10)
-        const refId = new mongoose.Types.ObjectId(id.padStart(24, '0').slice(-24));
-        await addPoints(userId, "LOG_CHALLENGE_DAY", refId);
+        await store.userChallenge.upsert({
+            where: {
+                userId_challengeId: {
+                    userId,
+                    challengeId: id
+                }
+            },
+            update: {
+                daysCompleted: currentProgress + 1
+            },
+            create: {
+                userId,
+                challengeId: id,
+                daysCompleted: currentProgress + 1
+            }
+        });
 
-        const updatedUser = await store.user.findById(userId);
+        const updatedUser = await store.user.update({
+            where: { id: userId },
+            data: { challengeProgress }
+        });
+
+        await addPoints(userId, "LOG_CHALLENGE_DAY", id);
+
         res.json({
             message: "Day logged",
             user: { 
@@ -324,7 +441,7 @@ export const awardPoints = async (req, res) => {
 
         await addPoints(userId, actionType, referenceId);
         
-        const updatedUser = await store.user.findById(userId);
+        const updatedUser = await store.user.findUnique({ where: { id: userId } });
         res.json({
             message: "Points awarded",
             user: { 

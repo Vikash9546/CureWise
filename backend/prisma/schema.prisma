@@ -1,0 +1,472 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// 1. AUTH DOMAIN
+// ==========================================
+
+model User {
+  id             String         @id @default(uuid()) @db.VarChar(36)
+  email          String         @unique
+  username       String?        @unique
+  password       String?
+  role           String         @default("CUSTOMER") // ADMIN, CUSTOMER, DOCTOR
+  firstName      String?
+  lastName       String?
+  points         Int            @default(0)
+  streak         Int            @default(0)
+  lastStreakDate DateTime?
+  badges         Json
+  challengesJoined Json
+  challengesCompleted Json
+  challengeProgress Json
+  likedPostIds   Json
+  savedPostIds   Json
+  assessment     Json?
+  activePlan     Json?
+  registeredEvents Json
+  isDeleted      Boolean        @default(false)
+  deletedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  // Relationships
+  address             Address?
+  doctorProfile       DoctorProfile?
+  appointments        Appointment[]
+  ambulanceBookings   AmbulanceBooking[]
+  posts               Post[]
+  comments            Comment[]
+  postLikes           PostLike[]
+  commentLikes        CommentLike[]
+  wellnessPlans       WellnessPlan[]
+  userTaskProgresses  UserTaskProgress[]
+  dailyLogs           DailyLog[]
+  customHabits        CustomHabit[]
+  userChallenges      UserChallenge[]
+  eventRegistrations  EventRegistration[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]
+  pointLogs           PointLog[]
+}
+
+model DoctorProfile {
+  id             String         @id @default(uuid()) @db.VarChar(36)
+  userId         String?        @unique @db.VarChar(36)
+  name           String
+  specialty      String
+  experience     Int
+  consultancyFee Int
+  rating         Float          @default(4.5)
+  imageUrl       String?        @db.VarChar(1000)
+  hospitalId     String?        @db.VarChar(36)
+  hospitalName   String?
+  city           String?
+  location       Json?
+  bio            String?        @db.Text
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  user           User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hospital       Hospital?      @relation(fields: [hospitalId], references: [id], onDelete: SetNull)
+  availabilities DoctorAvailability[]
+  slots          DoctorSlot[]
+  appointments   Appointment[]
+}
+
+model Address {
+  id          String    @id @default(uuid()) @db.VarChar(36)
+  userId      String?   @unique @db.VarChar(36)
+  hospitalId  String?   @unique @db.VarChar(36)
+  street      String?
+  city        String
+  state       String?
+  postalCode  String?
+  country     String    @default("India")
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hospital    Hospital? @relation(fields: [hospitalId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 2. HEALTHCARE DOMAIN
+// ==========================================
+
+model Hospital {
+  id             String          @id @default(uuid()) @db.VarChar(36)
+  name           String
+  city           String
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  address        Address?
+  doctors        DoctorProfile[]
+}
+
+model DoctorAvailability {
+  id              String        @id @default(uuid()) @db.VarChar(36)
+  doctorProfileId String        @db.VarChar(36)
+  dayOfWeek       Int           // 0 = Sunday, 1 = Monday, etc.
+  startTime       String        // e.g. "09:00"
+  endTime         String        // e.g. "17:00"
+  slotDuration    Int           @default(30)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  doctorProfile   DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+}
+
+model DoctorSlot {
+  id              String        @id @default(uuid()) @db.VarChar(36)
+  doctorProfileId String        @db.VarChar(36)
+  startTime       DateTime
+  endTime         DateTime
+  isBooked        Boolean       @default(false)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  doctorProfile   DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  appointment     Appointment?
+}
+
+model Appointment {
+  id              String        @id @default(uuid()) @db.VarChar(36)
+  userId          String        @db.VarChar(36)
+  doctorProfileId String        @db.VarChar(36)
+  slotId          String?       @unique @db.VarChar(36)
+  patientName     String
+  patientAge      Int
+  appointmentDate DateTime?
+  status          String        @default("PENDING")
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctorProfile   DoctorProfile @relation(fields: [doctorProfileId], references: [id], onDelete: Cascade)
+  slot            DoctorSlot?   @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  payment         Payment?
+}
+
+model Payment {
+  id            String      @id @default(uuid()) @db.VarChar(36)
+  appointmentId String      @unique @db.VarChar(36)
+  amount        Int
+  status        String      @default("PENDING") // PENDING, SUCCESS, FAILED
+  transactionId String?
+  provider      String?
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+}
+
+model AmbulanceBooking {
+  id            String      @id @default(uuid()) @db.VarChar(36)
+  userId        String?     @db.VarChar(36)
+  patientName   String
+  location      String
+  contactNumber String
+  emergencyType String
+  status        String      @default("REQUESTED")
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// ==========================================
+// 3. COMMUNITY DOMAIN
+// ==========================================
+
+model Category {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  name        String   @unique
+  description String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts       Post[]
+}
+
+model Post {
+  id            String     @id @default(uuid()) @db.VarChar(36)
+  authorId      String     @db.VarChar(36)
+  categoryId    String?    @db.VarChar(36)
+  authorName    String?
+  authorAvatar  String?
+  type          String     // STORY or DISCUSSION
+  title         String
+  content       String?    @db.Text
+  headline      String?
+  initialState  String?
+  currentState  String?
+  duration      String?
+  likesCount    Int        @default(0)
+  commentsCount Int        @default(0)
+  isAnonymous   Boolean    @default(false)
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  author        User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category      Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  comments      Comment[]
+  likes         PostLike[]
+  tags          PostTag[]
+}
+
+model Tag {
+  id        String    @id @default(uuid()) @db.VarChar(36)
+  name      String    @unique
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  posts     PostTag[]
+}
+
+model PostTag {
+  postId    String    @db.VarChar(36)
+  tagId     String    @db.VarChar(36)
+
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag       Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+}
+
+model Comment {
+  id         String        @id @default(uuid()) @db.VarChar(36)
+  postId     String        @db.VarChar(36)
+  userId     String        @db.VarChar(36)
+  parentId   String?       @db.VarChar(36)
+  text       String        @db.Text
+  likesCount Int           @default(0)
+
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  post       Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent     Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    Comment[]     @relation("CommentReplies")
+  likes      CommentLike[]
+}
+
+model PostLike {
+  userId    String   @db.VarChar(36)
+  postId    String   @db.VarChar(36)
+
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+}
+
+model CommentLike {
+  userId    String   @db.VarChar(36)
+  commentId String   @db.VarChar(36)
+
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@id([userId, commentId])
+}
+
+// ==========================================
+// 4. WELLNESS DOMAIN
+// ==========================================
+
+model WellnessPlan {
+  id         String         @id @default(uuid()) @db.VarChar(36)
+  userId     String         @db.VarChar(36)
+  assessment Json
+  isActive   Boolean        @default(true)
+
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks      WellnessTask[]
+}
+
+model WellnessTask {
+  id             String             @id @default(uuid()) @db.VarChar(36)
+  wellnessPlanId String             @db.VarChar(36)
+  title          String
+  description    String?
+  frequency      String
+  pointsAwarded  Int                @default(10)
+
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  wellnessPlan   WellnessPlan       @relation(fields: [wellnessPlanId], references: [id], onDelete: Cascade)
+  userProgress   UserTaskProgress[]
+}
+
+model UserTaskProgress {
+  id             String       @id @default(uuid()) @db.VarChar(36)
+  userId         String       @db.VarChar(36)
+  wellnessTaskId String       @db.VarChar(36)
+  logDate        DateTime     @db.Date
+  isCompleted    Boolean      @default(false)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wellnessTask   WellnessTask @relation(fields: [wellnessTaskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, wellnessTaskId, logDate])
+}
+
+model DailyLog {
+  id         String   @id @default(uuid()) @db.VarChar(36)
+  userId     String   @db.VarChar(36)
+  logDate    DateTime @db.Date
+  waterIntake Int      @default(0)
+  sleepHours Float    @default(0)
+  mood       String?
+  notes      String?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, logDate])
+}
+
+model CustomHabit {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  userId    String   @db.VarChar(36)
+  name      String
+  frequency String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Challenge {
+  id          String          @id @default(uuid()) @db.VarChar(36)
+  title       String
+  description String?
+  durationDays Int            @default(30)
+  points      Int             @default(50)
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  participants UserChallenge[]
+}
+
+model UserChallenge {
+  userId          String    @db.VarChar(36)
+  challengeId     String    @db.VarChar(36)
+  joinedAt        DateTime  @default(now())
+  daysCompleted   Int       @default(0)
+  isCompleted     Boolean   @default(false)
+  completedAt     DateTime?
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge       Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, challengeId])
+}
+
+// ==========================================
+// 5. EVENT DOMAIN
+// ==========================================
+
+model Event {
+  id          String              @id @default(uuid()) @db.VarChar(36)
+  name        String
+  description String?
+  date        DateTime
+  type        String
+  location    String?
+
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  registrations EventRegistration[]
+}
+
+model EventRegistration {
+  userId       String   @db.VarChar(36)
+  eventId      String   @db.VarChar(36)
+  registeredAt DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([userId, eventId])
+}
+
+// ==========================================
+// 6. SYSTEM DOMAIN
+// ==========================================
+
+model Notification {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  userId    String   @db.VarChar(36)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  userId    String?  @db.VarChar(36)
+  action    String
+  details   String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// ==========================================
+// SYSTEM LOGS
+// ==========================================
+
+model PointLog {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  userId      String   @db.VarChar(36)
+  actionType  String
+  points      Int
+  referenceId String   @db.VarChar(36)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, actionType, referenceId])
+}

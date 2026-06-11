@@ -1,6 +1,7 @@
 import store from "./models/index.js";
 import connectDB from "./config/db.js";
 import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
@@ -11,26 +12,46 @@ async function main() {
     const password = await bcrypt.hash("password123", 10);
 
     // Create Admin
-    const admin = await prisma.user.findOneAndUpdate(
-        { email: "admin@example.com" },
-        {
-            email: "admin@example.com",
+    const admin = await prisma.user.upsert({
+        where: { email: "admin@example.com" },
+        update: {
             password,
             role: "ADMIN",
         },
-        { upsert: true, new: true }
-    );
+        create: {
+            email: "admin@example.com",
+            password,
+            role: "ADMIN",
+            badges: ["beginner"],
+            challengesJoined: [],
+            challengesCompleted: [],
+            challengeProgress: {},
+            likedPostIds: [],
+            savedPostIds: [],
+            registeredEvents: []
+        }
+    });
 
     // Create Customer
-    await prisma.user.findOneAndUpdate(
-        { email: "customer@example.com" },
-        {
-            email: "customer@example.com",
+    await prisma.user.upsert({
+        where: { email: "customer@example.com" },
+        update: {
             password,
             role: "CUSTOMER",
         },
-        { upsert: true, new: true }
-    );
+        create: {
+            email: "customer@example.com",
+            password,
+            role: "CUSTOMER",
+            badges: ["beginner"],
+            challengesJoined: [],
+            challengesCompleted: [],
+            challengeProgress: {},
+            likedPostIds: [],
+            savedPostIds: [],
+            registeredEvents: []
+        }
+    });
 
     console.log("Seed data created: Admin (admin@example.com), Customer (customer@example.com)");
     console.log("Password for both: password123");
@@ -84,11 +105,31 @@ async function main() {
     ];
 
     for (const doc of doctors) {
-        await prisma.doctor.findOneAndUpdate(
-            { name: doc.name },
-            doc,
-            { upsert: true, new: true }
-        );
+        const existingDoc = await prisma.doctorProfile.findFirst({
+            where: { name: doc.name }
+        });
+        const docData = {
+            name: doc.name,
+            specialty: doc.specialty,
+            experience: doc.experience,
+            consultancyFee: doc.consultancyFee,
+            rating: doc.rating,
+            imageUrl: doc.imageUrl,
+            hospitalName: doc.hospitalName,
+            city: doc.city,
+            location: { lat: doc.lat, lon: doc.lon }
+        };
+
+        if (existingDoc) {
+            await prisma.doctorProfile.update({
+                where: { id: existingDoc.id },
+                data: docData
+            });
+        } else {
+            await prisma.doctorProfile.create({
+                data: docData
+            });
+        }
     }
     console.log("Main doctors with city data seeded.");
 }
@@ -99,5 +140,5 @@ main()
         process.exit(1);
     })
     .finally(async () => {
-        // await mongoose.disconnect();
+        await prisma.$disconnect();
     });

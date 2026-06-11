@@ -234,22 +234,31 @@ async function main() {
     ];
 
     for (const doc of naturalDoctors) {
-        const docWithLocation = {
-            ...doc,
-            location: {
-                type: "Point",
-                coordinates: [doc.lon, doc.lat] // MongoDB expects [lng, lat]
-            }
+        const existingDoc = await prisma.doctorProfile.findFirst({
+            where: { name: doc.name }
+        });
+        const docData = {
+            name: doc.name,
+            specialty: doc.specialty,
+            experience: doc.experience,
+            consultancyFee: doc.consultancyFee,
+            rating: doc.rating,
+            imageUrl: doc.imageUrl,
+            hospitalName: doc.hospitalName,
+            city: doc.city,
+            location: [doc.lon, doc.lat]
         };
-        // Remove flat lat/lon to avoid cluttering DB
-        delete docWithLocation.lat;
-        delete docWithLocation.lon;
 
-        await prisma.doctor.findOneAndUpdate(
-            { name: doc.name },
-            docWithLocation,
-            { upsert: true, new: true }
-        );
+        if (existingDoc) {
+            await prisma.doctorProfile.update({
+                where: { id: existingDoc.id },
+                data: docData
+            });
+        } else {
+            await prisma.doctorProfile.create({
+                data: docData
+            });
+        }
     }
 
     console.log("Successfully seeded 20 Natural Medicine experts with City info.");
@@ -261,5 +270,5 @@ main()
         process.exit(1);
     })
     .finally(async () => {
-        // await mongoose.disconnect();
+        await prisma.$disconnect();
     });

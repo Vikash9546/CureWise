@@ -2,25 +2,25 @@ import store from "../models/index.js";
 
 export const requestAmbulance = async (req, res) => {
     const userId = req.user.id;
-    const { patientName, location, contactNumber, emergencyType, notes } = req.body;
+    const { patientName, location, contactNumber, emergencyType } = req.body;
 
     if (!patientName || !location || !contactNumber || !emergencyType) {
         return res.status(400).json({ message: "patientName, location, contactNumber, and emergencyType are required" });
     }
 
     try {
-        const booking = await store.ambulance.create({
-            userId,
-            patientName,
-            location,
-            contactNumber,
-            emergencyType,
-            status: "REQUESTED",
+        const booking = await store.ambulanceBooking.create({
+            data: {
+                userId,
+                patientName,
+                location,
+                contactNumber,
+                emergencyType,
+                status: "REQUESTED",
+            }
         });
 
-        // Add points for requesting an ambulance (if desired, let's add a small amount or just sync user)
-        // For now, let's just fetch user to sync points if any are added
-        const updatedUser = await store.user.findById(userId);
+        const updatedUser = await store.user.findUnique({ where: { id: userId } });
 
         res.status(201).json({
             booking,
@@ -39,7 +39,10 @@ export const requestAmbulance = async (req, res) => {
 export const getMyRequests = async (req, res) => {
     const userId = req.user.id;
     try {
-        const bookings = await store.ambulance.find({ userId }).sort({ createdAt: -1 });
+        const bookings = await store.ambulanceBooking.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' }
+        });
         res.json(bookings);
     } catch (error) {
         console.error("Get ambulance requests error:", error);
@@ -56,11 +59,10 @@ export const updateStatus = async (req, res) => {
         return res.status(400).json({ message: "Invalid status" });
     }
     try {
-        const updated = await store.ambulance.findByIdAndUpdate(
-            id,
-            { status },
-            { new: true }
-        );
+        const updated = await store.ambulanceBooking.update({
+            where: { id },
+            data: { status }
+        });
         res.json(updated);
     } catch (error) {
         console.error("Update ambulance status error:", error);
@@ -70,7 +72,9 @@ export const updateStatus = async (req, res) => {
 
 export const getAllRequests = async (req, res) => {
     try {
-        const bookings = await store.ambulance.find().sort({ createdAt: -1 });
+        const bookings = await store.ambulanceBooking.findMany({
+            orderBy: { createdAt: 'desc' }
+        });
         res.json(bookings);
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
@@ -82,19 +86,18 @@ export const cancelRequest = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const booking = await store.ambulance.findById(id);
+        const booking = await store.ambulanceBooking.findUnique({ where: { id } });
         if (!booking) return res.status(404).json({ message: "Request not found" });
 
         // Only original user or admin can cancel
-        if (booking.userId.toString() !== userId && req.user.role !== "ADMIN") {
+        if (booking.userId !== userId && req.user.role !== "ADMIN") {
             return res.status(403).json({ message: "Unauthorized" });
         }
 
-        const updated = await store.ambulance.findByIdAndUpdate(
-            id,
-            { status: "CANCELLED" },
-            { new: true }
-        );
+        const updated = await store.ambulanceBooking.update({
+            where: { id },
+            data: { status: "CANCELLED" }
+        });
 
         res.json(updated);
     } catch (error) {
@@ -108,15 +111,15 @@ export const deleteRequest = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const booking = await store.ambulance.findById(id);
+        const booking = await store.ambulanceBooking.findUnique({ where: { id } });
         if (!booking) return res.status(404).json({ message: "Request not found" });
 
         // Only original user or admin can delete
-        if (booking.userId.toString() !== userId && req.user.role !== "ADMIN") {
+        if (booking.userId !== userId && req.user.role !== "ADMIN") {
             return res.status(403).json({ message: "Unauthorized" });
         }
 
-        await store.ambulance.findByIdAndDelete(id);
+        await store.ambulanceBooking.delete({ where: { id } });
 
         res.json({ message: "Ambulance request deleted successfully" });
     } catch (error) {
@@ -124,4 +127,3 @@ export const deleteRequest = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
-

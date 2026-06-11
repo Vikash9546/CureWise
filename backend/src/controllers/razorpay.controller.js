@@ -54,16 +54,33 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     if (isAuthentic) {
         try {
-            // Update appointment status to CONFIRMED and payment to SUCCESS
-            await store.appointment.findByIdAndUpdate(
-                appointmentId,
-                {
-                    status: "CONFIRMED",
-                    "payment.status": "SUCCESS",
-                    "payment.transactionId": razorpay_payment_id,
-                    "payment.provider": "RAZORPAY"
-                }
-            );
+            const appointment = await store.appointment.findUnique({ where: { id: appointmentId } });
+            if (appointment) {
+                const updatedPayment = {
+                    ...(typeof appointment.payment === 'object' && appointment.payment !== null ? appointment.payment : {}),
+                    status: "SUCCESS",
+                    transactionId: razorpay_payment_id,
+                    provider: "RAZORPAY"
+                };
+
+                await store.appointment.update({
+                    where: { id: appointmentId },
+                    data: {
+                        status: "CONFIRMED",
+                        payment: updatedPayment
+                    }
+                });
+
+                // Update the normalized Payment record as well
+                await store.payment.updateMany({
+                    where: { appointmentId },
+                    data: {
+                        status: "SUCCESS",
+                        transactionId: razorpay_payment_id,
+                        provider: "RAZORPAY"
+                    }
+                });
+            }
 
             res.status(200).json({ message: "Payment verified successfully" });
         } catch (error) {

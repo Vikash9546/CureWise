@@ -51,7 +51,7 @@ export default function DoctorBooking() {
         if (user) {
             fetchDoctors();
         }
-    }, [user, searchQuery, selectedSpecialty, currentPage]);
+    }, [user, searchQuery, selectedSpecialty, currentPage, sortOrder]);
 
     useEffect(() => {
         if (user) {
@@ -66,7 +66,7 @@ export default function DoctorBooking() {
     }, [user]);
 
     const fetchDoctors = async () => {
-        console.log("fetchDoctors called with sortOrder:", sortOrder, "searchQuery:", searchQuery, "selectedSpecialty:", selectedSpecialty);
+        // console.log("fetchDoctors called with sortOrder:", sortOrder, "searchQuery:", searchQuery, "selectedSpecialty:", selectedSpecialty);
         setDoctorsLoading(true);
         try {
             const { data } = await api.get('/doctors', {
@@ -78,6 +78,7 @@ export default function DoctorBooking() {
                     limit: 9
                 }
             });
+            // console.log(data.doctors)
             setDoctors(data.doctors || []);
             setTotalPages(data.totalPages || 1);
         } catch (error) {

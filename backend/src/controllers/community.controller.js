@@ -184,6 +184,11 @@ export const toggleLikePost = async (req, res) => {
             return res.status(400).json({ message: "Missing postId or userId" });
         }
 
+        const post = await store.post.findUnique({ where: { id: postId } });
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
         const existingLike = await store.postLike.findUnique({
             where: {
                 userId_postId: {

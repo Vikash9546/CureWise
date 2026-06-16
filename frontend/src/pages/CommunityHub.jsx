@@ -22,24 +22,11 @@ const CATEGORIES = [
     { id: 'fitness', name: 'Fitness', icon: Dumbbell, color: 'blue', count: 28 },
 ];
 
-const BADGES = {
-    beginner: { icon: '🌱', label: 'Beginner', min: 0 },
-    explorer: { icon: '🌿', label: 'Wellness Explorer', min: 200 },
-    mentor: { icon: '🌳', label: 'Nature Mentor', min: 800 },
-    healer: { icon: '🏆', label: 'Community Healer', min: 2000 },
-};
-
 const SORT_OPTIONS = [
     { id: 'recent', label: 'Most Recent' },
     { id: 'popular', label: 'Most Liked' },
     { id: 'unanswered', label: 'No Answers' },
     { id: 'expert', label: 'Expert Verified' },
-];
-
-const CHALLENGES = [
-    { id: '60d5ecb5c5e6a20015f0e901', title: '7-Day Meditation', emoji: '🧘', progress: 4, total: 7, streak: 4 },
-    { id: '60d5ecb5c5e6a20015f0e902', title: '14-Day Detox', emoji: '🍃', progress: 9, total: 14, streak: 9 },
-    { id: '60d5ecb5c5e6a20015f0e903', title: 'Water Streak', emoji: '💧', progress: 11, total: 30, streak: 11 },
 ];
 
 const INITIAL_POSTS = [
@@ -87,30 +74,7 @@ const INITIAL_POSTS = [
     },
 ];
 
-const TOP_HEALERS = [
-    { name: 'HerbGuru', points: 2100, badge: '🏆', isExpert: true },
-    { name: 'PureLiving', points: 1250, badge: '🌳', isExpert: false },
-    { name: 'NatureSoul', points: 850, badge: '🌿', isExpert: false },
-    { name: 'WellnessMom', points: 620, badge: '🌿', isExpert: false },
-    { name: 'MindfulMeera', points: 310, badge: '🌱', isExpert: false },
-];
 
-// ── Helper Components ─────────────────────────────────────────
-function Badge({ badge }) {
-    return (
-        <span title={badge.label}
-            className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-            {badge.icon} {badge.label}
-        </span>
-    );
-}
-
-function getBadge(points) {
-    if (points >= BADGES.healer.min) return BADGES.healer;
-    if (points >= BADGES.mentor.min) return BADGES.mentor;
-    if (points >= BADGES.explorer.min) return BADGES.explorer;
-    return BADGES.beginner;
-}
 
 function Avatar({ author, isExpert, isAnonymous, size = 'md' }) {
     const sz = size === 'sm' ? 'w-8 h-8 text-xs' : 'w-11 h-11 text-sm';
@@ -463,9 +427,7 @@ export default function CommunityHub() {
     const [reportedPosts, setReportedPosts] = useState(new Set());
     const [toast, setToast] = useState(null);
 
-    // Points & badge come from the persistent context
-    const myPoints = ud.profile.points;
-    const myBadge = ud.currentBadge;
+
 
     // ── Show toast ──
     const showToast = (msg, type = 'success') => {
@@ -541,7 +503,7 @@ export default function CommunityHub() {
 
         try {
             await ud.toggleLikePost(id);
-            showToast(ud.isPostLiked(id) ? 'Unliked.' : '+2 pts for liking! 💚');
+            showToast(ud.isPostLiked(id) ? 'Unliked.' : 'Post Liked!');
         } catch (error) {
             // Revert is handled by the next authoritative fetch or manual refresh
             console.error("Like error:", error);
@@ -569,7 +531,7 @@ export default function CommunityHub() {
         try {
             await ud.addComment(postId, text, false);
             fetchPosts();
-            showToast('Comment posted! +5 pts 🌱');
+            showToast('Comment posted! 🌱');
         } catch (error) {
             fetchPosts();
         }
@@ -613,7 +575,7 @@ export default function CommunityHub() {
         setPosts(prev => prev.map(p => {
             if (p.id !== postId) return p;
             const isSaved = ud.isPostSaved(postId);
-            showToast(isSaved ? 'Post unsaved.' : 'Post saved! +3 pts 🔖');
+            showToast(isSaved ? 'Post unsaved.' : 'Post saved! 🔖');
             return p;
         }));
     };
@@ -635,7 +597,7 @@ export default function CommunityHub() {
         if (newPost) {
             fetchPosts();
             setIsCreateOpen(false);
-            showToast('Discussion posted! +10 pts 🌳');
+            showToast('Discussion posted! 🌳');
         }
     };
 
@@ -654,7 +616,6 @@ export default function CommunityHub() {
         return result;
     }, [posts, activeCategory, activeSort, searchQuery]);
 
-    // myBadge now comes from the context (set above)
 
     return (
         <div className="w-full bg-[#f8f9f4] -mt-8 -mx-4 px-4 py-12 min-h-screen">
@@ -710,17 +671,7 @@ export default function CommunityHub() {
 
                     {/* ── Left Sidebar ── */}
                     <aside className="w-full lg:w-64 space-y-5 shrink-0">
-                        {/* My Badge Card */}
-                        <div className="bg-gradient-to-br from-emerald-600 to-teal-500 p-6 rounded-3xl text-white shadow-lg shadow-emerald-500/20">
-                            <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mb-3">Your Reputation</p>
-                            <div className="text-3xl mb-1">{myBadge.icon}</div>
-                            <h3 className="font-bold text-lg">{myBadge.label}</h3>
-                            <p className="text-emerald-100/80 text-xs font-bold mt-1">{myPoints} pts earned</p>
-                            <div className="mt-3 space-y-1">
-                                <ProgressBar value={myPoints - 200} max={600} />
-                                <p className="text-[10px] opacity-60 font-bold">Next: 🌳 Nature Mentor at 800 pts</p>
-                            </div>
-                        </div>
+
 
                         {/* Categories */}
                         <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
@@ -741,28 +692,7 @@ export default function CommunityHub() {
                             </div>
                         </div>
 
-                        {/* Daily Challenges */}
-                        <div className="bg-emerald-900 p-6 rounded-3xl text-white shadow-xl shadow-emerald-900/20">
-                            <div className="flex items-center gap-2 mb-4">
-                                <Flame className="w-5 h-5 text-orange-400" />
-                                <h3 className="font-bold text-sm">Daily Challenges</h3>
-                            </div>
-                            <div className="space-y-4">
-                                {CHALLENGES.map(ch => (
-                                    <div key={ch.id}>
-                                        <div className="flex justify-between items-center mb-1.5">
-                                            <span className="text-xs font-bold text-emerald-100">{ch.emoji} {ch.title}</span>
-                                            <span className="text-[10px] text-orange-400 font-black">🔥{ch.streak}</span>
-                                        </div>
-                                        <ProgressBar value={ch.progress} max={ch.total} />
-                                        <p className="text-[10px] text-emerald-100/50 font-bold mt-1">{ch.progress}/{ch.total} days</p>
-                                    </div>
-                                ))}
-                            </div>
-                            <Link to="/challenges" className="block mt-5 text-center text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:text-white transition-colors">
-                                View All Challenges →
-                            </Link>
-                        </div>
+
                     </aside>
 
                     {/* ── Main Feed ── */}
@@ -841,46 +771,7 @@ export default function CommunityHub() {
 
                     {/* ── Right Sidebar ── */}
                     <aside className="w-full lg:w-64 space-y-5 shrink-0">
-                        {/* Leaderboard */}
-                        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-5 flex items-center gap-2">
-                                <Trophy className="w-3.5 h-3.5" /> Top Healers
-                            </h3>
-                            <div className="space-y-4">
-                                {TOP_HEALERS.map((h, i) => (
-                                    <div key={h.name} className="flex items-center gap-3">
-                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 font-black text-xs ${i === 0 ? 'bg-amber-100 text-amber-700' : i === 1 ? 'bg-slate-100 text-slate-600' : 'bg-emerald-50 text-emerald-700'}`}>
-                                            {i + 1}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="font-bold text-slate-800 text-sm truncate">{h.name}</span>
-                                                {h.isExpert && <BadgeCheck className="w-3.5 h-3.5 text-amber-500 shrink-0" />}
-                                            </div>
-                                            <span className="text-[10px] text-slate-400 font-bold">{h.badge} {h.points} pts</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
 
-                        {/* Badges Guide */}
-                        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-                                <Award className="w-3.5 h-3.5" /> Badges
-                            </h3>
-                            <div className="space-y-3">
-                                {Object.values(BADGES).map(b => (
-                                    <div key={b.label} className="flex items-center gap-3">
-                                        <span className="text-xl">{b.icon}</span>
-                                        <div>
-                                            <p className="font-bold text-slate-800 text-sm">{b.label}</p>
-                                            <p className="text-[10px] text-slate-400 font-bold">{b.min}+ points</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* Expert Tip */}
                         <div className="p-6 bg-amber-50 rounded-3xl border border-amber-100">

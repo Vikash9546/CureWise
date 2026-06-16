@@ -415,17 +415,24 @@ export default function CommunityHub() {
         try {
             const { data } = await api.get('/community');
             const fetchedPosts = data.map(p => ({
-                id: p._id,
+                id: p.id,
                 title: p.title,
                 content: p.content,
-                likes: p.likesCount || 0,
-                isLiked: ud.isPostLiked(p._id),
+                likes: p.likesCount || p._count?.likes || 0,
+                isLiked: ud.isPostLiked(p.id),
                 time: new Date(p.createdAt).toLocaleDateString(),
-                author: p.isAnonymous ? 'Anonymous' : (p.author?.username || p.author?.firstName || 'Anonymous'),
+                author: p.isAnonymous ? 'Anonymous' : (p.authorId?.username || p.authorId?.firstName || p.authorName || 'Anonymous'),
+                category: p.category?.name || 'herbal',
+                tags: p.tags?.map(t => t.tag?.name) || [],
                 comments: (p.comments || []).map(c => ({
                     ...c,
-                    author: c.author?.username || c.author?.firstName || 'Anonymous',
-                    time: new Date(c.createdAt).toLocaleDateString()
+                    author: c.userId?.username || c.userId?.firstName || 'Anonymous',
+                    time: new Date(c.createdAt).toLocaleDateString(),
+                    replies: (c.replies || []).map(r => ({
+                        ...r,
+                        author: r.userId?.username || r.userId?.firstName || 'Anonymous',
+                        time: new Date(r.createdAt).toLocaleDateString()
+                    }))
                 }))
             }));
             setPosts(fetchedPosts);

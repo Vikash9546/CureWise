@@ -12,6 +12,21 @@ export const getPosts = async (req, res) => {
                         lastName: true,
                         email: true
                     }
+                },
+                category: true,
+                tags: {
+                    include: { tag: true }
+                },
+                comments: {
+                    where: { parentId: null },
+                    include: {
+                        user: { select: { username: true, firstName: true } },
+                        replies: {
+                            include: {
+                                user: { select: { username: true, firstName: true } }
+                            }
+                        }
+                    }
                 }
             }
         });

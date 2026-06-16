@@ -258,7 +258,7 @@ export default function DoctorBooking() {
                                                 <p className="text-violet-600 text-sm font-medium mb-1">{doctor.specialty}</p>
                                                 <div className="flex items-center gap-1 text-xs text-amber-500">
                                                     <Star className="w-3 h-3 fill-amber-500" />
-                                                    <span>{doctor.rating}</span>
+                                                    <span>{parseFloat(doctor.rating).toFixed(1)}</span>
                                                     <span className="text-slate-500 ml-1">({doctor.experience} Yrs Exp)</span>
                                                 </div>
                                             </div>
@@ -487,7 +487,7 @@ export default function DoctorBooking() {
                                 </div>
                                 <div className="bg-slate-50 p-4 rounded-2xl text-center">
                                     <p className="text-[10px] font-black uppercase text-slate-400">Rating</p>
-                                    <p className="font-bold">{selectedDetailDoctor.rating}</p>
+                                    <p className="font-bold">{parseFloat(selectedDetailDoctor.rating).toFixed(1)}</p>
                                 </div>
                                 <div className="bg-slate-50 p-4 rounded-2xl text-center">
                                     <p className="text-[10px] font-black uppercase text-slate-400">Fee</p>

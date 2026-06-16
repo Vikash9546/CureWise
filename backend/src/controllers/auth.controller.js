@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import store from "../models/index.js";
-import { addPoints } from "../services/points.service.js";
 import { OAuth2Client } from "google-auth-library";
 
 // Use placeholder for now. The user will replace this in .env
@@ -34,10 +33,6 @@ export const register = async (req, res) => {
                 username: username || null,
                 password: hashedPassword,
                 role: role || "CUSTOMER",
-                badges: ["beginner"],
-                challengesJoined: [],
-                challengesCompleted: [],
-                challengeProgress: {},
                 likedPostIds: [],
                 savedPostIds: [],
                 registeredEvents: []
@@ -64,72 +59,29 @@ export const login = async (req, res) => {
             return res.status(401).json({ message: "Invalid credentials" });
         }
 
-        // Streak Logic
-        const now = new Date();
-        const lastDate = user.lastStreakDate ? new Date(user.lastStreakDate) : null;
-        let newStreak = user.streak || 0;
-        let shouldReward = false;
-
-        if (!lastDate) {
-            newStreak = 1;
-            shouldReward = true;
-        } else {
-            const diffTime = Math.abs(now - lastDate);
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-            if (diffDays === 1) {
-                newStreak += 1;
-                shouldReward = true;
-            } else if (diffDays > 1) {
-                newStreak = 1;
-                shouldReward = true;
-            }
-        }
-
-        if (shouldReward) {
-            await store.user.update({
-                where: { id: user.id },
-                data: {
-                    streak: newStreak,
-                    lastStreakDate: now
-                }
-            });
-            await addPoints(user.id, "STREAK_BONUS", user.id);
-        }
-
-        // Fetch user again to get updated streak/points
-        const updatedUserObj = shouldReward ? await store.user.findUnique({ where: { id: user.id } }) : user;
-
         const token = jwt.sign(
-            { id: updatedUserObj.id, email: updatedUserObj.email, role: updatedUserObj.role },
+            { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET || "secret",
             { expiresIn: "24h" }
         );
 
         const activeWellnessPlan = await store.wellnessPlan.findFirst({
-            where: { userId: updatedUserObj.id, isActive: true },
+            where: { userId: user.id, isActive: true },
             orderBy: { createdAt: 'desc' }
         });
 
         res.json({
             token,
             user: {
-                id: updatedUserObj.id,
-                email: updatedUserObj.email,
-                role: updatedUserObj.role,
-                firstName: updatedUserObj.firstName,
-                lastName: updatedUserObj.lastName,
-                username: updatedUserObj.username,
-                points: updatedUserObj.points,
-                streak: updatedUserObj.streak,
-                badges: updatedUserObj.badges,
-                lastStreakDate: updatedUserObj.lastStreakDate,
-                challengesJoined: updatedUserObj.challengesJoined || [],
-                challengesCompleted: updatedUserObj.challengesCompleted || [],
-                challengeProgress: updatedUserObj.challengeProgress || {},
-                likedPostIds: updatedUserObj.likedPostIds || [],
-                savedPostIds: updatedUserObj.savedPostIds || [],
-                name: updatedUserObj.username || (updatedUserObj.firstName && updatedUserObj.lastName ? `${updatedUserObj.firstName} ${updatedUserObj.lastName}` : updatedUserObj.email),
+                id: user.id,
+                email: user.email,
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                username: user.username,
+                likedPostIds: user.likedPostIds || [],
+                savedPostIds: user.savedPostIds || [],
+                name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
                 activeWellnessPlan
             },
         });
@@ -158,13 +110,6 @@ export const getMe = async (req, res) => {
             firstName: user.firstName,
             lastName: user.lastName,
             username: user.username,
-            points: user.points,
-            streak: user.streak,
-            badges: user.badges,
-            lastStreakDate: user.lastStreakDate,
-            challengesJoined: user.challengesJoined || [],
-            challengesCompleted: user.challengesCompleted || [],
-            challengeProgress: user.challengeProgress || {},
             likedPostIds: user.likedPostIds || [],
             savedPostIds: user.savedPostIds || [],
             name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),
@@ -176,7 +121,7 @@ export const getMe = async (req, res) => {
 };
 
 export const updateProfile = async (req, res) => {
-    const { username, firstName, lastName, points, streak, badges, lastStreakDate, likedPostIds, savedPostIds, registeredEvents } = req.body;
+    const { username, firstName, lastName, likedPostIds, savedPostIds, registeredEvents } = req.body;
 
     try {
         // Check if username is already taken by another user
@@ -193,16 +138,9 @@ export const updateProfile = async (req, res) => {
                 ...(username !== undefined && { username: username || null }),
                 ...(firstName !== undefined && { firstName }),
                 ...(lastName !== undefined && { lastName }),
-                ...(points !== undefined && { points: parseInt(points) }),
-                ...(streak !== undefined && { streak: parseInt(streak) }),
-                ...(badges !== undefined && { badges }),
-                ...(lastStreakDate !== undefined && { lastStreakDate: lastStreakDate ? new Date(lastStreakDate) : null }),
                 ...(likedPostIds !== undefined && { likedPostIds }),
                 ...(savedPostIds !== undefined && { savedPostIds }),
                 ...(registeredEvents !== undefined && { registeredEvents }),
-                ...(req.body.challengesJoined !== undefined && { challengesJoined: req.body.challengesJoined }),
-                ...(req.body.challengesCompleted !== undefined && { challengesCompleted: req.body.challengesCompleted }),
-                ...(req.body.challengeProgress !== undefined && { challengeProgress: req.body.challengeProgress }),
             }
         });
 
@@ -218,13 +156,6 @@ export const updateProfile = async (req, res) => {
             firstName: updatedUser.firstName,
             lastName: updatedUser.lastName,
             username: updatedUser.username,
-            points: updatedUser.points,
-            streak: updatedUser.streak,
-            badges: updatedUser.badges,
-            lastStreakDate: updatedUser.lastStreakDate,
-            challengesJoined: updatedUser.challengesJoined || [],
-            challengesCompleted: updatedUser.challengesCompleted || [],
-            challengeProgress: updatedUser.challengeProgress || {},
             likedPostIds: updatedUser.likedPostIds || [],
             savedPostIds: updatedUser.savedPostIds || [],
             name: updatedUser.username || (updatedUser.firstName && updatedUser.lastName ? `${updatedUser.firstName} ${updatedUser.lastName}` : updatedUser.email),
@@ -261,10 +192,6 @@ export const googleLogin = async (req, res) => {
                     firstName: payload.given_name,
                     lastName: payload.family_name,
                     role: "CUSTOMER",
-                    badges: ["beginner"],
-                    challengesJoined: [],
-                    challengesCompleted: [],
-                    challengeProgress: {},
                     likedPostIds: [],
                     savedPostIds: [],
                     registeredEvents: []
@@ -292,13 +219,6 @@ export const googleLogin = async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 username: user.username,
-                points: user.points,
-                streak: user.streak,
-                badges: user.badges,
-                lastStreakDate: user.lastStreakDate,
-                challengesJoined: user.challengesJoined || [],
-                challengesCompleted: user.challengesCompleted || [],
-                challengeProgress: user.challengeProgress || {},
                 likedPostIds: user.likedPostIds || [],
                 savedPostIds: user.savedPostIds || [],
                 name: user.username || (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email),

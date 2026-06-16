@@ -1,6 +1,4 @@
 import store from "../models/index.js";
-import { addPoints } from "../services/points.service.js";
-
 export const getPosts = async (req, res) => {
     try {
         const userId = req.user?.id;
@@ -164,18 +162,9 @@ export const addComment = async (req, res) => {
             data: { commentsCount: { increment: 1 } }
         });
 
-        // Add points for commenting
-        await addPoints(userId, "COMMENT", comment.id);
-
-        const updatedUser = await store.user.findUnique({ where: { id: userId } });
-
         return res.status(201).json({
             comment,
-            user: updatedUser ? {
-                points: updatedUser.points,
-                streak: updatedUser.streak,
-                badges: updatedUser.badges
-            } : null
+            user: null
         });
     } catch (error) {
         console.error("EXPLICIT ERROR in addComment:", error);
@@ -221,8 +210,6 @@ export const toggleLikePost = async (req, res) => {
                 where: { id: postId },
                 data: { likesCount: { decrement: 1 } }
             });
-            
-            await addPoints(userId, "UNLIKE_POST", postId);
 
             likedPostIds = likedPostIds.filter(id => id !== postId);
             const updatedUser = await store.user.update({
@@ -233,9 +220,6 @@ export const toggleLikePost = async (req, res) => {
             return res.json({ 
                 liked: false, 
                 user: updatedUser ? {
-                    points: updatedUser.points,
-                    streak: updatedUser.streak,
-                    badges: updatedUser.badges,
                     likedPostIds: updatedUser.likedPostIds
                 } : null
             });
@@ -251,8 +235,6 @@ export const toggleLikePost = async (req, res) => {
                 where: { id: postId },
                 data: { likesCount: { increment: 1 } }
             });
-            
-            await addPoints(userId, "LIKE_POST", postId);
 
             if (!likedPostIds.includes(postId)) {
                 likedPostIds.push(postId);
@@ -265,9 +247,6 @@ export const toggleLikePost = async (req, res) => {
             return res.json({ 
                 liked: true, 
                 user: updatedUser ? {
-                    points: updatedUser.points,
-                    streak: updatedUser.streak,
-                    badges: updatedUser.badges,
                     likedPostIds: updatedUser.likedPostIds
                 } : null
             });
@@ -305,12 +284,10 @@ export const toggleSavePost = async (req, res) => {
             data: { savedPostIds }
         });
         
-        await addPoints(userId, isSaved ? "UNSAVE_POST" : "SAVE_POST", postId);
-
         res.json({ 
             message: "Save status updated", 
             saved: !isSaved,
-            user: { points: updatedUser.points, badges: updatedUser.badges }
+            user: {}
         });
     } catch (error) {
         console.error("Save toggle error:", error);
@@ -318,140 +295,3 @@ export const toggleSavePost = async (req, res) => {
     }
 };
 
-export const joinChallenge = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const userId = req.user?.id;
-
-        if (!id || !userId) return res.status(400).json({ message: "Missing data" });
-
-        const user = await store.user.findUnique({ where: { id: userId } });
-        let challengesJoined = Array.isArray(user?.challengesJoined) ? user.challengesJoined : [];
-
-        if (!challengesJoined.includes(id)) {
-            challengesJoined.push(id);
-        }
-
-        const challenge = await store.challenge.findUnique({ where: { id } });
-        if (!challenge) {
-            await store.challenge.create({
-                data: {
-                    id,
-                    title: `Challenge #${id}`,
-                    description: "Seeded challenge",
-                    durationDays: 30,
-                    points: 50
-                }
-            });
-        }
-
-        await store.userChallenge.upsert({
-            where: {
-                userId_challengeId: {
-                    userId,
-                    challengeId: id
-                }
-            },
-            update: {},
-            create: {
-                userId,
-                challengeId: id
-            }
-        });
-
-        const updatedUser = await store.user.update({
-            where: { id: userId },
-            data: { challengesJoined }
-        });
-
-        await addPoints(userId, "JOIN_CHALLENGE", id);
-
-        res.json({
-            message: "Joined challenge",
-            user: { 
-                points: updatedUser.points, 
-                badges: updatedUser.badges,
-                challengesJoined: updatedUser.challengesJoined 
-            }
-        });
-    } catch (error) {
-        console.error("Join challenge error:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-export const logChallengeDay = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const userId = req.user?.id;
-
-        if (!id || !userId) return res.status(400).json({ message: "Missing data" });
-
-        const user = await store.user.findUnique({ where: { id: userId } });
-        const challengeProgress = (user?.challengeProgress && typeof user.challengeProgress === 'object') ? { ...user.challengeProgress } : {};
-        const currentProgress = challengeProgress[id] || 0;
-        challengeProgress[id] = currentProgress + 1;
-
-        await store.userChallenge.upsert({
-            where: {
-                userId_challengeId: {
-                    userId,
-                    challengeId: id
-                }
-            },
-            update: {
-                daysCompleted: currentProgress + 1
-            },
-            create: {
-                userId,
-                challengeId: id,
-                daysCompleted: currentProgress + 1
-            }
-        });
-
-        const updatedUser = await store.user.update({
-            where: { id: userId },
-            data: { challengeProgress }
-        });
-
-        await addPoints(userId, "LOG_CHALLENGE_DAY", id);
-
-        res.json({
-            message: "Day logged",
-            user: { 
-                points: updatedUser.points, 
-                badges: updatedUser.badges,
-                challengeProgress: updatedUser.challengeProgress 
-            }
-        });
-    } catch (error) {
-        console.error("Log day error:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-export const awardPoints = async (req, res) => {
-    try {
-        const { actionType, referenceId } = req.body;
-        const userId = req.user?.id;
-
-        if (!actionType || !referenceId || !userId) {
-            return res.status(400).json({ message: "Missing actionType or referenceId" });
-        }
-
-        await addPoints(userId, actionType, referenceId);
-        
-        const updatedUser = await store.user.findUnique({ where: { id: userId } });
-        res.json({
-            message: "Points awarded",
-            user: { 
-                points: updatedUser.points, 
-                badges: updatedUser.badges,
-                streak: updatedUser.streak
-            }
-        });
-    } catch (error) {
-        console.error("Award points error:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};

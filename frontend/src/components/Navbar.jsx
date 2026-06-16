@@ -10,7 +10,6 @@ import {
 
 export default function Navbar() {
     const { user, logout } = useAuth();
-    const { profile, currentBadge } = useUserData();
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -138,23 +137,13 @@ export default function Navbar() {
                     <div className="flex items-center gap-3 md:gap-6">
                         {user ? (
                             <div className="flex items-center gap-3 md:gap-5">
-                                {/* Points Display */}
-                                <Link to="/challenges" className="flex items-center gap-2 px-2.5 md:px-3 py-1.5 bg-emerald-50 rounded-full border border-emerald-100/50 hover:bg-emerald-100 transition-colors group">
-                                    <Zap className="w-3 md:w-3.5 h-3 md:h-3.5 text-emerald-500 fill-emerald-500 group-hover:scale-110 transition-transform" />
-                                    <span className="text-[10px] md:text-[11px] font-black text-emerald-700">{profile.points}</span>
-                                </Link>
-
                                 <Link to="/profile" className="flex items-center gap-3 group">
                                     <div className="hidden md:flex flex-col items-end">
-                                        <span className="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-widest">{currentBadge?.label} {currentBadge?.icon}</span>
                                         <span className="font-bold text-sm text-slate-800">{user.username || user.firstName || user.email.split('@')[0]}</span>
                                     </div>
                                     <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-100 p-0.5 border-2 border-emerald-500 group-hover:border-emerald-600 transition-colors relative">
                                         <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-slate-400 font-bold overflow-hidden text-sm">
                                             {user.username?.[0]?.toUpperCase() || user.firstName?.[0]?.toUpperCase() || <User className="w-5 h-5" />}
-                                        </div>
-                                        <div className="absolute -bottom-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-white rounded-full shadow-lg border border-slate-50 flex items-center justify-center text-[8px] md:text-[10px]">
-                                            {currentBadge?.icon}
                                         </div>
                                     </div>
                                 </Link>

@@ -1,6 +1,4 @@
 import store from "../models/index.js";
-import { addPoints } from "../services/points.service.js";
-
 export const getWellnessPlans = async (req, res) => {
     try {
         const plans = await store.wellnessPlan.findMany({
@@ -25,18 +23,10 @@ export const createWellnessPlan = async (req, res) => {
             }
         });
 
-        // Add points for starting/completing a plan
-        await addPoints(req.user.id, "COMPLETE_PLAN", wellnessPlan.id);
-
-        const updatedUser = await store.user.findUnique({ where: { id: req.user.id } });
-
-        res.status(201).json({
-            wellnessPlan,
-            user: updatedUser ? {
-                points: updatedUser.points,
-                streak: updatedUser.streak,
-                badges: updatedUser.badges
-            } : null
+        res.json({
+            message: "Wellness plan generated and saved successfully",
+            plan: wellnessPlan,
+            user: {}
         });
     } catch (error) {
         console.error("Create wellness plan error:", error);

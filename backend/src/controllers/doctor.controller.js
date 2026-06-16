@@ -1,6 +1,4 @@
 import store from "../models/index.js";
-import { addPoints } from "../services/points.service.js";
-
 const SPECIALTIES = ["General", "Ayurveda", "Homeopathy", "Naturopathy", "Cardiology", "Dermatology", "Neurology", "Orthopedics", "Pediatrics", "Psychiatry", "Gynecology", "ENT", "Ophthalmology"];
 
 export const getAllDoctors = async (req, res) => {
@@ -140,18 +138,10 @@ export const createAppointment = async (req, res) => {
             }
         });
 
-        // Add points for booking an appointment
-        await addPoints(userId, "BOOK_APPOINTMENT", appointment.id);
-
-        const updatedUser = await store.user.findUnique({ where: { id: userId } });
-
-        res.status(201).json({
+        res.status(201).json({ 
+            message: "Appointment booked successfully", 
             appointment,
-            user: updatedUser ? {
-                points: updatedUser.points,
-                streak: updatedUser.streak,
-                badges: updatedUser.badges
-            } : null
+            user: {}
         });
     } catch (error) {
         console.error("Create appointment error:", error);

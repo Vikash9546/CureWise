@@ -21,32 +21,13 @@ import YogaSection from './pages/YogaSection';
 import CommunityHub from './pages/CommunityHub';
 import SuccessStories from './pages/SuccessStories';
 import StoryDetail from './pages/StoryDetail';
-import DailyChallenges from './pages/DailyChallenges';
+
 import WellnessPlans from './pages/WellnessPlans';
 import YogaCentreFinder from './pages/YogaCentreFinder';
 import './index.css';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
 
-// ── Global Badge Toast ────────────────────────────────────────
-function BadgeToast() {
-    const { newBadges } = useUserData();
-    if (!newBadges || newBadges.length === 0) return null;
-    return (
-        <div className="fixed bottom-6 left-6 z-[500] flex flex-col gap-3 pointer-events-none">
-            {newBadges.map((badge, i) => badge && (
-                <div key={badge.id || i}
-                    className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce pointer-events-auto">
-                    <span className="text-2xl">{badge.icon}</span>
-                    <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Badge Unlocked! 🎉</p>
-                        <p className="font-bold text-sm">{badge.label}</p>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-}
 
 const ProtectedRoute = ({ children, roles }) => {
     const { user, loading } = useAuth();
@@ -109,13 +90,13 @@ function App() {
                                         <Route path="/community" element={<CommunityHub />} />
                                         <Route path="/success-stories" element={<SuccessStories />} />
                                         <Route path="/success-stories/:id" element={<StoryDetail />} />
-                                        <Route path="/challenges" element={<DailyChallenges />} />
+
                                         <Route path="/wellness-plans" element={<WellnessPlans />} />
                                         <Route path="/yoga-finder" element={<YogaCentreFinder />} />
                                     </Routes>
                                 </main>
                             </div>
-                            <BadgeToast />
+
                             <Toaster
                                 position="top-right"
                                 toastOptions={{

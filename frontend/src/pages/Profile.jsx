@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useUserData, BADGE_DEFS } from '../context/UserDataContext';
+import { useUserData } from '../context/UserDataContext';
 import {
     User, Mail, Shield, ShieldCheck, Flame, Zap, Award,
     MessageSquare, Heart, Bookmark, History, Target,
@@ -42,7 +42,7 @@ export default function Profile() {
         );
     }
 
-    const { profile, currentBadge } = ud;
+    const { profile } = ud;
 
     // Determine the display name: username first, then full name, then email
     const displayName = user.username
@@ -93,9 +93,6 @@ export default function Profile() {
                     <div className="shrink-0">
                         <div className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-violet-100 to-indigo-100 rounded-[2.5rem] flex items-center justify-center text-4xl border border-white shadow-inner relative group">
                             <span className="text-6xl">{user.username?.[0]?.toUpperCase() || user.name?.[0] || '🌿'}</span>
-                            <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-white rounded-2xl shadow-xl flex items-center justify-center text-2xl border border-slate-50">
-                                {currentBadge.icon}
-                            </div>
                         </div>
                     </div>
 
@@ -169,36 +166,6 @@ export default function Profile() {
                             </div>
                         </div>
 
-                        {/* Wellness Row */}
-                        <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                            <div className="bg-[#f8f9f4] px-6 py-4 rounded-3xl border border-slate-100/50 flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500">
-                                    <Flame className="w-5 h-5 fill-orange-500" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Streak</p>
-                                    <p className="font-bold text-slate-900">{profile.streak} Days</p>
-                                </div>
-                            </div>
-                            <div className="bg-[#f8f9f3] px-6 py-4 rounded-3xl border border-slate-100/50 flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                    <Zap className="w-5 h-5 fill-emerald-600" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Score</p>
-                                    <p className="font-bold text-slate-900">{profile.points} pts</p>
-                                </div>
-                            </div>
-                            <div className="bg-[#f3f5f8] px-6 py-4 rounded-3xl border border-slate-100/50 flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center text-violet-600">
-                                    <Award className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Rank</p>
-                                    <p className="font-bold text-slate-900">{currentBadge.label}</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div className="md:self-start mt-6 md:mt-0">
@@ -216,51 +183,9 @@ export default function Profile() {
             </div>
 
             {/* ── Main Content Grid ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left: Stats & Badges */}
-                <div className="lg:col-span-1 space-y-8">
-                    {/* Challenges Progress */}
-                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 p-7">
-                        <h3 className="font-bold text-slate-900 mb-6 flex items-center justify-between">
-                            Active Challenges
-                            <Link to="/challenges" className="text-emerald-600 text-[10px] font-black uppercase">Browse New</Link>
-                        </h3>
-                        <div className="space-y-6">
-                            {profile.challengesJoined.length > 0 ? (
-                                profile.challengesJoined.slice(0, 3).map(id => (
-                                    <div key={id} className="space-y-2">
-                                        <div className="flex justify-between text-xs font-bold text-slate-700">
-                                            <span>Challenge #{id}</span>
-                                            <span>{profile.challengeProgress[id]} Logged</span>
-                                        </div>
-                                        <div className="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
-                                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(profile.challengeProgress[id] || 0) * 10}%` }} />
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-center py-4 text-slate-400 text-sm font-medium italic">No active challenges</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Badges Collection */}
-                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 p-7">
-                        <h3 className="font-bold text-slate-900 mb-6">Badges & Achievements</h3>
-                        <div className="grid grid-cols-4 gap-4">
-                            {BADGE_DEFS.map(b => (
-                                <div key={b.id}
-                                    title={`${b.label}: ${b.desc}`}
-                                    className={`aspect-square flex items-center justify-center rounded-2xl border transition-all ${profile.badges.includes(b.id) ? 'bg-violet-50 border-violet-100 text-2xl grayscale-0' : 'bg-slate-50 border-slate-100 text-xl grayscale opacity-40'}`}>
-                                    {b.icon}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right: Content Tabs */}
-                <div className="lg:col-span-2 space-y-8">
+            <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto">
+                {/* Content Tabs */}
+                <div className="space-y-8">
                     {/* Tabs Navigation */}
                     <div className="flex gap-2 p-1.5 bg-white border border-slate-100 rounded-3xl shadow-sm overflow-x-auto scrollbar-hide">
                         {[

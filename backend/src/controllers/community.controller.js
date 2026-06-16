@@ -257,6 +257,12 @@ export const toggleLikePost = async (req, res) => {
             });
         }
     } catch (error) {
+        if (error.code === 'P2002') {
+            // Unique constraint violation (likely double-clicked)
+            // Just return success since the like already exists
+            return res.json({ liked: true });
+        }
+        
         console.error("EXPLICIT ERROR in toggleLikePost:", error);
         return res.status(500).json({ 
             message: "Internal server error",

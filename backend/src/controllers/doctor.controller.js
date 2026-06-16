@@ -131,20 +131,12 @@ export const createAppointment = async (req, res) => {
                 appointmentDate: appointmentDate ? new Date(appointmentDate) : null,
                 status: simulated ? "CONFIRMED" : "PENDING",
                 payment: {
-                    amount: doctor.consultancyFee,
-                    status: simulated ? "SUCCESS" : "PENDING",
-                    provider: simulated ? "SIMULATED" : "PENDING"
+                    create: {
+                        amount: doctor.consultancyFee,
+                        status: simulated ? "SUCCESS" : "PENDING",
+                        provider: simulated ? "SIMULATED" : "PENDING"
+                    }
                 }
-            }
-        });
-
-        // Create normalized Payment record
-        await store.payment.create({
-            data: {
-                appointmentId: appointment.id,
-                amount: doctor.consultancyFee,
-                status: simulated ? "SUCCESS" : "PENDING",
-                provider: simulated ? "SIMULATED" : "PENDING"
             }
         });
 

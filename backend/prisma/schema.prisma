@@ -22,15 +22,15 @@ model User {
   points         Int            @default(0)
   streak         Int            @default(0)
   lastStreakDate DateTime?
-  badges         Json
-  challengesJoined Json
-  challengesCompleted Json
-  challengeProgress Json
-  likedPostIds   Json
-  savedPostIds   Json
+  badges         Json           @default("[]")
+  challengesJoined Json         @default("[]")
+  challengesCompleted Json      @default("[]")
+  challengeProgress Json        @default("{}")
+  likedPostIds   Json           @default("[]")
+  savedPostIds   Json           @default("[]")
   assessment     Json?
   activePlan     Json?
-  registeredEvents Json
+  registeredEvents Json         @default("[]")
   isDeleted      Boolean        @default(false)
   deletedAt      DateTime?
   createdAt      DateTime       @default(now())
@@ -105,7 +105,7 @@ model Address {
 model Hospital {
   id             String          @id @default(uuid()) @db.VarChar(36)
   name           String
-  city           String
+  city           String          @default("")
   
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -265,7 +265,7 @@ model Comment {
 
   post       Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
   user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent     Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  parent     Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade, map: "Comment_parentId_reply_fkey")
   replies    Comment[]     @relation("CommentReplies")
   likes      CommentLike[]
 }

@@ -5,8 +5,9 @@
     "main": "src/index.js",
     "type": "module",
     "scripts": {
+        "postinstall": "prisma generate",
         "dev": "nodemon src/index.js",
-        "build": "tsc",
+        "build": "prisma generate",
         "start": "node src/index.js",
         "seed": "node src/seed.js",
         "seed:doctors": "node src/seed-natural-doctors.js",
